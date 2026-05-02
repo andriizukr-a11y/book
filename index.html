@@ -329,33 +329,22 @@
       return div.innerHTML;
     }
 
-    // Завантаження файлу
-    async function loadFile(tabId, path) {
-      const output = document.getElementById(`output-${tabId}`);
-      output.innerHTML = '<div class="loading">Завантаження...</div>';
-
+    // Завантаження файлу (повертає дані, не рендерить)
+    async function loadFileData(path) {
       const rawUrl = `https://raw.githubusercontent.com/${CONFIG.repo}/main/${path}`;
-
       try {
         const response = await fetch(rawUrl + '?t=' + Date.now());
-        if (response.ok) {
-          const text = await response.text();
-          const bookmarks = parseBookmarks(text);
-          bookmarksData[tabId].bookmarks = bookmarks;
-          displayBookmarks(tabId, bookmarks);
-        } else {
-          throw new Error('HTTP ' + response.status);
-        }
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        const text = await response.text();
+        return parseBookmarks(text);
       } catch (err) {
-        output.innerHTML = `<div class="error">Помилка: ${err.message}<br><a href="${rawUrl}" target="_blank" style="color:#4a9eff;">Перевірити файл</a></div>`;
+        return []; // Порожній список при помилці
       }
     }
 
     // Отримання списку файлів з директорії
     async function loadDirectory() {
       const tabsContainer = document.getElementById('tabs-container');
-      // Пустий контейнер, без "Завантаження..."
-
       const apiUrl = `https://api.github.com/repos/${CONFIG.repo}/contents/${CONFIG.dir}`;
 
       try {
@@ -369,23 +358,32 @@
 
         if (xbelFiles.length === 0) {
           tabsContainer.innerHTML = '<div class="error">Не знайдено .xbel файлів у директорії bookmarks/</div>';
+          document.getElementById('preloader').classList.add('hidden');
           return;
         }
 
-        filesList = xbelFiles;
+        // Завантажуємо ВСІ файли перед показом
+        const loadedData = {};
+        await Promise.all(xbelFiles.map(async (file) => {
+          const id = fileId(file.name);
+          const bookmarks = await loadFileData(file.path);
+          loadedData[id] = bookmarks;
+        }));
 
-        // Очищаємо і створюємо таби
+        // Тепер створюємо таби і показуємо все
+        filesList = xbelFiles;
         tabsContainer.innerHTML = '';
         createTabs(xbelFiles);
 
-        // Приховуємо прелоадер - сторінка готова
-        document.getElementById('preloader').classList.add('hidden');
-
-        // Завантажуємо всі файли
-        xbelFiles.forEach(file => {
-          const id = fileId(file.name);
-          loadFile(id, file.path);
+        // Відображаємо завантажені дані
+        Object.keys(loadedData).forEach(tabId => {
+          bookmarksData[tabId] = bookmarksData[tabId] || {};
+          bookmarksData[tabId].bookmarks = loadedData[tabId];
+          displayBookmarks(tabId, loadedData[tabId]);
         });
+
+        // Приховуємо прелоадер - все готово
+        document.getElementById('preloader').classList.add('hidden');
 
       } catch (err) {
         tabsContainer.innerHTML = `<div class="error">Помилка завантаження директорії: ${err.message}</div>`;
