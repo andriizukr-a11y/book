@@ -25,6 +25,7 @@
       margin-bottom: 30px;
       border-bottom: 2px solid #333;
       padding-bottom: 0;
+      flex-wrap: wrap;
     }
 
     .tab {
@@ -176,67 +177,82 @@
   </style>
 </head>
 <body>
-  <!-- Таби -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('links1')">
-      Спорт <span class="tab-count" id="count-links1">(0)</span>
-    </button>
-    <button class="tab" onclick="switchTab('links2')">
-      Різне <span class="tab-count" id="count-links2">(0)</span>
-    </button>
-  </div>
+  <!-- Таби (генеруються динамічно) -->
+  <div class="tabs" id="tabs-container"></div>
 
-  <!-- Контент -->
-  <div id="content-links1" class="tab-content active">
-    <div class="section-title">Закладки спорту та вправ</div>
-    <div id="output-links1"></div>
-  </div>
-
-  <div id="content-links2" class="tab-content">
-    <div class="section-title">Фільми, серіали та інше</div>
-    <div id="output-links2"></div>
-  </div>
+  <!-- Контент табів (генерується динамічно) -->
+  <div id="contents-container"></div>
 
   <!-- Кнопки -->
   <div class="actions">
-    <button class="btn" onclick="editCurrent()">Редагувати</button>
     <button class="btn btn-primary" onclick="location.reload()">Оновити</button>
   </div>
 
   <script>
-    const PROJECTS = {
-      links1: {
-        name: 'Спорт',
-        repo: 'andriizukr-a11y/Links1',
-        path: 'links1/bookmarks.xbel'
-      },
-      links2: {
-        name: 'Різне',
-        repo: 'andriizukr-a11y/Links2',
-        path: 'links1/bookmarks.xbel'
-      }
+    const CONFIG = {
+      repo: 'andriizukr-a11y/Links1',
+      dir: 'bookmarks'
     };
 
-    let currentTab = 'links1';
+    let currentTab = null;
     const bookmarksData = {};
+    let filesList = [];
+
+    // Генерація ID з імені файлу
+    function fileId(filename) {
+      return filename.replace(/[^a-zA-Z0-9]/g, '_');
+    }
+
+    // Форматування імені табу (без .xbel)
+    function formatTabName(filename) {
+      return filename.replace(/\.xbel$/i, '');
+    }
+
+    // Створення табів
+    function createTabs(files) {
+      const tabsContainer = document.getElementById('tabs-container');
+      const contentsContainer = document.getElementById('contents-container');
+
+      files.forEach((file, index) => {
+        const id = fileId(file.name);
+        const tabName = formatTabName(file.name);
+
+        // Кнопка табу
+        const tabBtn = document.createElement('button');
+        tabBtn.className = 'tab' + (index === 0 ? ' active' : '');
+        tabBtn.onclick = () => switchTab(id);
+        tabBtn.innerHTML = `${tabName} <span class="tab-count" id="count-${id}">(0)</span>`;
+        tabBtn.dataset.tabId = id;
+        tabsContainer.appendChild(tabBtn);
+
+        // Контент табу
+        const content = document.createElement('div');
+        content.id = `content-${id}`;
+        content.className = 'tab-content' + (index === 0 ? ' active' : '');
+        content.innerHTML = `
+          <div class="section-title">${tabName}</div>
+          <div id="output-${id}"></div>
+        `;
+        contentsContainer.appendChild(content);
+
+        // Зберігаємо шлях до файлу
+        bookmarksData[id] = { path: file.path, name: file.name };
+      });
+
+      if (files.length > 0) {
+        currentTab = fileId(files[0].name);
+      }
+    }
 
     // Перемикання табів
-    function switchTab(project) {
-      currentTab = project;
+    function switchTab(tabId) {
+      currentTab = tabId;
 
-      // Оновлюємо активний таб
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
 
-      event.target.classList.add('active');
-      document.getElementById(`content-${project}`).classList.add('active');
-    }
-
-    // Відкрити редагування поточного файлу
-    function editCurrent() {
-      const project = PROJECTS[currentTab];
-      const editUrl = `https://github.com/${project.repo}/edit/main/${project.path}`;
-      window.open(editUrl, '_blank');
+      document.querySelector(`[data-tab-id="${tabId}"]`).classList.add('active');
+      document.getElementById(`content-${tabId}`).classList.add('active');
     }
 
     // Парсинг XML
@@ -256,11 +272,10 @@
     }
 
     // Відображення закладок
-    function displayBookmarks(project, bookmarks) {
-      const output = document.getElementById(`output-${project}`);
-      const countEl = document.getElementById(`count-${project}`);
+    function displayBookmarks(tabId, bookmarks) {
+      const output = document.getElementById(`output-${tabId}`);
+      const countEl = document.getElementById(`count-${tabId}`);
 
-      // Фільтруємо сепаратори для підрахунку
       const realBookmarks = bookmarks.filter(b => !b.href.includes('separator.floccus.org'));
       countEl.textContent = `(${realBookmarks.length})`;
 
@@ -301,35 +316,68 @@
       return div.innerHTML;
     }
 
-    // Завантаження файлу з GitHub
-    async function loadProject(project) {
-      const output = document.getElementById(`output-${project}`);
+    // Завантаження файлу
+    async function loadFile(tabId, path) {
+      const output = document.getElementById(`output-${tabId}`);
       output.innerHTML = '<div class="loading">Завантаження...</div>';
 
-      const p = PROJECTS[project];
-      const rawUrl = `https://raw.githubusercontent.com/${p.repo}/main/${p.path}`;
+      const rawUrl = `https://raw.githubusercontent.com/${CONFIG.repo}/main/${path}`;
 
       try {
         const response = await fetch(rawUrl + '?t=' + Date.now());
         if (response.ok) {
           const text = await response.text();
-          bookmarksData[project] = parseBookmarks(text);
-          displayBookmarks(project, bookmarksData[project]);
+          const bookmarks = parseBookmarks(text);
+          bookmarksData[tabId].bookmarks = bookmarks;
+          displayBookmarks(tabId, bookmarks);
         } else {
           throw new Error('HTTP ' + response.status);
         }
       } catch (err) {
-        output.innerHTML = `<div class="error">Помилка завантаження: ${err.message}<br><a href="${rawUrl}" target="_blank" style="color:#4a9eff;">Перевірити файл</a></div>`;
+        output.innerHTML = `<div class="error">Помилка: ${err.message}<br><a href="${rawUrl}" target="_blank" style="color:#4a9eff;">Перевірити файл</a></div>`;
       }
     }
 
-    // Завантажуємо всі проєкти
-    function loadAll() {
-      Object.keys(PROJECTS).forEach(project => loadProject(project));
+    // Отримання списку файлів з директорії
+    async function loadDirectory() {
+      const tabsContainer = document.getElementById('tabs-container');
+      tabsContainer.innerHTML = '<div class="loading">Завантаження списку...</div>';
+
+      const apiUrl = `https://api.github.com/repos/${CONFIG.repo}/contents/${CONFIG.dir}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const data = await response.json();
+
+        // Фільтруємо тільки .xbel файли
+        const xbelFiles = data.filter(item => item.type === 'file' && item.name.endsWith('.xbel'));
+
+        if (xbelFiles.length === 0) {
+          tabsContainer.innerHTML = '<div class="error">Не знайдено .xbel файлів у директорії bookmarks/</div>';
+          return;
+        }
+
+        filesList = xbelFiles;
+
+        // Очищаємо і створюємо таби
+        tabsContainer.innerHTML = '';
+        createTabs(xbelFiles);
+
+        // Завантажуємо всі файли
+        xbelFiles.forEach(file => {
+          const id = fileId(file.name);
+          loadFile(id, file.path);
+        });
+
+      } catch (err) {
+        tabsContainer.innerHTML = `<div class="error">Помилка завантаження директорії: ${err.message}</div>`;
+      }
     }
 
     // Запуск
-    loadAll();
+    loadDirectory();
   </script>
 </body>
 </html>
