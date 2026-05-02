@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://pyxml.sourceforge.net/topics/dtds/xbel.dtd">
 <xbel version="1.0">
-<!--- highestId :18: for Floccus bookmark sync browser extension -->
+<!--- highestId :19: for Floccus bookmark sync browser extension -->
 
 <bookmark href="https://blimb.su/" id="1">
   <title>Blimb - Сайт для глаз</title>
@@ -51,7 +51,7 @@
 <bookmark href="https://www.youtube.com/watch?v=MR4Y4SuC3qk" id="15">
   <title>Гимнастика для шеи доктора А.Ю. Шишонина (без музыки) - YouTube</title>
 </bookmark>
-<bookmark href="https://www.youtube.com/feed/history" id="18">
-  <title></title>
+<bookmark href="https://rezka-ua.pub/series/comedy/1856-vse-nenavidyat-krisa-2005.html" id="19">
+  <title>Крис</title>
 </bookmark>
 </xbel>
