@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Links</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      margin: 0;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    
+    .bookmarks-list {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .bookmark-item {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .bookmark-icon {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      min-height: 16px;
+      margin-right: 12px;
+      border-radius: 3px;
+      display: block;
+      object-fit: contain;
+    }
+    
+    .separator {
+      height: 1px;
+      background: #444444;
+      margin: 20px 0;
+      position: relative;
+    }
+    
+    .bookmark-item a {
+      text-decoration: none;
+      color: #e0e0e0;
+      font-weight: 400;
+      font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 500px;
+      display: inline-block;
+    }
+    
+    .bookmark-item a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    
+    .loading, .error, .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #888888;
+      font-size: 16px;
+    }
+    
+    .error {
+      color: #ff6b6b;
+    }
+    
+      </style>
+</head>
+<body>
+  <div id="output"></div>
+  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <button onclick="location.reload()" style="background: #333; color: white; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Оновити</button>
+  </div>
+
+  <script>
+    // Універсальні налаштування - визначаємо проєкт автоматично
+    const PROJECT_CONFIG = {
+      // Визначаємо проєкт за URL потрапляння
+      getProject: function() {
+        const hostname = window.location.hostname;
+        const pathname = window.location.pathname;
+        
+        if (hostname.includes('links1') || pathname.includes('links1')) {
+          return {
+            name: 'links1',
+            repo: 'andriizukr-a11y/Links1'
+          };
+        } else if (hostname.includes('links2') || pathname.includes('links2')) {
+          return {
+            name: 'links2', 
+            repo: 'andriizukr-a11y/Links2'
+          };
+        } else {
+          // За замовчуванням links1
+          return {
+            name: 'links1',
+            repo: 'andriizukr-a11y/Links1'
+          };
+        }
+      },
+      
+      // URL для API
+      getApiUrl: function() {
+        return "/api/bookmarks";
+      }
+    };
+
+    const config = PROJECT_CONFIG.getProject();
+    const apiUrl = PROJECT_CONFIG.getApiUrl();
+
+    let allBookmarks = [];
+
+    // Парсинг XML та відображення закладок
+    function parseAndDisplayBookmarks(xmlText) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+      
+      const bookmarks = xmlDoc.getElementsByTagName("bookmark");
+      allBookmarks = [];
+      
+      for (let bookmark of bookmarks) {
+        const href = bookmark.getAttribute("href");
+        const title = bookmark.getElementsByTagName("title")[0]?.textContent || "Без назви";
+        
+        allBookmarks.push({ title, href });
+      }
+      
+      displayBookmarks(allBookmarks);
+    }
+
+    // Відображення закладок
+    function displayBookmarks(bookmarks) {
+      const output = document.getElementById("output");
+      
+      if (bookmarks.length === 0) {
+        output.innerHTML = '<div class="no-results">Закладки не знайдено</div>';
+        return;
+      }
+      
+      const bookmarksHTML = bookmarks.map(bookmark => {
+        // Перевіряємо, чи це сепаратор
+        if (bookmark.href.includes('separator.floccus.org')) {
+          return `<div class="separator"></div>`;
+        }
+        
+        return `
+          <div class="bookmark-item">
+            <img class="bookmark-icon" src="https://www.google.com/s2/favicons?domain=${new URL(bookmark.href).hostname}&sz=32" alt="" onerror="this.style.display='none'">
+            <a href="${bookmark.href}" target="_blank">${escapeHtml(bookmark.title)}</a>
+          </div>
+        `;
+      }).join('');
+      
+      output.innerHTML = `<div class="bookmarks-list">${bookmarksHTML}</div>`;
+    }
+
+    // Безпечне відображення HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Завантаження з Vercel API (універсально для всіх проєктів)
+    function loadFile() {
+      const output = document.getElementById("output");
+      
+      console.log(`[API] Завантажуємо для проєкту: ${config.name}`);
+      console.log(`[API] Repo: ${config.repo}`);
+      
+      const xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          console.log('[API] Завантажено з Vercel API');
+          parseAndDisplayBookmarks(xhr.responseText);
+        } else if (xhr.readyState === 4) {
+          console.log('[API] Помилка:', xhr.status);
+          showError();
+        }
+      };
+      xhr.onerror = function() {
+        console.log('[API] XHR error');
+        showError();
+      };
+      
+      // Унікальний URL для уникнення кешування
+      const url = apiUrl + '?t=' + Date.now() + '&project=' + config.name;
+      console.log('[API] URL:', url);
+      xhr.open('GET', url, true);
+      xhr.send();
+      
+      function showError() {
+        output.innerHTML = `<div class="error">Помилка: Не вдалося завантажити bookmarks.xbel з API для проєкту ${config.name}</div>`;
+      }
+    }
+
+    // Примусове перезавантаження без кешу
+    function forceReload() {
+      window.location.href = window.location.href + '?nocache=' + Date.now();
+    }
+
+    // Запуск
+    loadFile();
+  </script>
+</body>
+</html>
