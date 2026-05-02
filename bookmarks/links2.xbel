@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://pyxml.sourceforge.net/topics/dtds/xbel.dtd">
+<xbel version="1.0">
+<!--- highestId :3: for Floccus bookmark sync browser extension -->
+
+<bookmark href="https://docs.google.com/spreadsheets/d/1rH4AanOlujaRgAAAZ7xyQ0lA-Aq2A67Tf50RzhWaHHQ/edit?gid=1637487928#gid=1637487928" id="1">
+  <title>Фільми</title>
+</bookmark>
+<bookmark href="https://docs.google.com/spreadsheets/d/1rH4AanOlujaRgAAAZ7xyQ0lA-Aq2A67Tf50RzhWaHHQ/edit?gid=1379353656#gid=1379353656" id="2">
+  <title>Серіали</title>
+</bookmark>
+<bookmark href="https://andriizukr-a11y.github.io/Links2/" id="3">
+  <title>Закладки з Google Drive</title>
+</bookmark>
+</xbel>
