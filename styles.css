@@ -7,7 +7,7 @@ body {
   background: #1a1a1a;
   color: #ffffff;
   margin: 0;
-  padding: 20px 40px 40px;
+  padding: 24px 40px 40px;
   line-height: 1.6;
   min-height: 100vh;
 }
@@ -20,6 +20,11 @@ body {
   border-bottom: 2px solid #333;
   padding-bottom: 0;
   flex-wrap: wrap;
+  position: sticky;
+  top: 0;
+  background: #1a1a1a;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .tab {
@@ -43,17 +48,33 @@ body {
 
 .tab.active {
   color: #fff;
-  background: #1a1a1a;
+  background: #252525;
   border-bottom: 2px solid #4a9eff;
 }
 
+.tab.active:hover {
+  color: #fff;
+  background: #252525;
+}
+
 .tab-count {
-  font-size: 12px;
-  color: #666;
+  display: inline-block;
+  background: #2a2a2a;
+  border-radius: 10px;
+  padding: 0 6px;
+  font-size: 11px;
+  line-height: 18px;
+  color: #888;
   margin-left: 6px;
+  visibility: hidden;
+}
+
+.tab-count.ready {
+  visibility: visible;
 }
 
 .tab.active .tab-count {
+  background: rgba(74, 158, 255, 0.15);
   color: #4a9eff;
 }
 
@@ -66,48 +87,52 @@ body {
 }
 
 .bookmarks-list {
-  max-width: 700px;
-  margin: 0 auto;
+  max-width: 800px;
+  margin: 0;
 }
 
 .bookmark-item {
-  margin-bottom: 8px;
+  margin-bottom: 1px;
+  padding: 7px 10px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
+  text-decoration: none;
+  color: #c8c8c8;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  border-left: 2px solid transparent;
+}
+
+.bookmark-item:hover {
+  background: #252525;
+  color: #ffffff;
+  border-left: 2px solid #4a9eff;
+  padding-left: 8px;
 }
 
 .bookmark-icon {
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  min-height: 18px;
   margin-right: 12px;
-  border-radius: 3px;
+  border-radius: 4px;
   display: block;
   object-fit: contain;
 }
 
 .separator {
   height: 0;
-  border-top: 1px solid #444444;
-  margin: 20px 0;
+  border-top: 1px solid #333333;
+  margin: 14px 0;
 }
 
-.bookmark-item a {
-  text-decoration: none;
-  color: #e0e0e0;
-  font-weight: 400;
+.bookmark-title {
   font-size: 15px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 600px;
-  display: inline-block;
-}
-
-.bookmark-item a:hover {
-  color: #ffffff;
-  text-decoration: underline;
+  min-width: 0;
 }
 
 .loading, .error, .no-results {
@@ -151,4 +176,16 @@ body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  body {
+    padding: 16px 16px 32px;
+  }
+
+  .bookmark-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 }

@@ -26,6 +26,7 @@ function displayBookmarks(tabId, bookmarks) {
 
   const realBookmarks = bookmarks.filter(b => !b.href.includes('separator.floccus.org'));
   countEl.textContent = `(${realBookmarks.length})`;
+  countEl.classList.add('ready');
 
   if (!bookmarks.length) {
     output.innerHTML = '<div class="no-results">Закладки не знайдено</div>';
@@ -54,18 +55,20 @@ function displayBookmarks(tabId, bookmarks) {
     }
 
     html += `
-      <div class="bookmark-item">
+      <a class="bookmark-item" href="${bookmark.href}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(bookmark.title)}">
         ${iconHtml}
-        <a href="${bookmark.href}" target="_blank" rel="noopener noreferrer">
-          ${escapeHtml(bookmark.title)}
-        </a>
-      </div>
+        <span class="bookmark-title">${escapeHtml(cleanTitle(bookmark.title))}</span>
+      </a>
     `;
   }
 
   html += '</div>';
   output.innerHTML = html;
   loadFavicons(output);
+}
+
+function cleanTitle(title) {
+  return title.replace(/\s-\s(YouTube|Google Диск|Google Drive)$/i, '').trim();
 }
 
 function escapeHtml(text) {
