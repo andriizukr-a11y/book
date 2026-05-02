@@ -73,7 +73,6 @@
   <script>
     const xmlFile = "bookmarks.xbel";
     const githubUrl = "https://raw.githubusercontent.com/andriizukr-a11y/Links1/main/bookmarks.xbel";
-    const corsProxy = "https://api.allorigins.win/raw?url=";
 
     let allBookmarks = [];
 
@@ -150,19 +149,19 @@
       xhr.open('GET', xmlFile, true);
       xhr.send();
       
-      // Завантаження з GitHub
-      async function loadFromGitHub() {
-        try {
-          const response = await fetch(corsProxy + encodeURIComponent(githubUrl));
-          if (response.ok) {
-            const text = await response.text();
-            parseAndDisplayBookmarks(text);
-          } else {
+      // Завантаження з GitHub через XMLHttpRequest
+      function loadFromGitHub() {
+        const xhr2 = new XMLHttpRequest();
+        xhr2.onreadystatechange = function() {
+          if (xhr2.readyState === 4 && (xhr2.status === 200 || xhr2.status === 0)) {
+            parseAndDisplayBookmarks(xhr2.responseText);
+          } else if (xhr2.readyState === 4) {
             showError();
           }
-        } catch (err) {
-          showError();
-        }
+        };
+        xhr2.onerror = showError;
+        xhr2.open('GET', githubUrl, true);
+        xhr2.send();
       }
       
       function showError() {
