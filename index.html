@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Закладки з Google Drive</title>
+  <title>Links</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -47,6 +47,11 @@
       color: #e0e0e0;
       font-weight: 400;
       font-size: 15px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 500px;
+      display: inline-block;
     }
     
     .bookmark-item a:hover {
@@ -69,10 +74,13 @@
 </head>
 <body>
   <div id="output"></div>
+  <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
+    <button onclick="location.reload()" style="background: #333; color: white; border: 1px solid #555; padding: 8px 12px; border-radius: 4px; cursor: pointer;">Оновити</button>
+  </div>
 
   <script>
     const xmlFile = "bookmarks.xbel";
-    const githubUrl = "https://raw.githubusercontent.com/andriizukr-a11y/Links1/main/bookmarks.xbel";
+    const rawUrl = "https://raw.githubusercontent.com/andriizukr-a11y/Links1/main/bookmarks.xbel";
 
     let allBookmarks = [];
 
@@ -131,42 +139,70 @@
     function loadFile() {
       const output = document.getElementById("output");
       
+      console.log('[DEBUG] Починаємо завантаження');
+      console.log('[DEBUG] Protocol:', window.location.protocol);
+      console.log('[DEBUG] Спроба завантажити:', xmlFile);
+      
       // Спроба 1: локальний файл через XMLHttpRequest
       const xhr = new XMLHttpRequest();
       xhr.onreadystatechange = function() {
+        console.log('[DEBUG] XHR state:', xhr.readyState, 'status:', xhr.status);
+        
         if (xhr.readyState === 4) {
           if (xhr.status === 200 || (xhr.status === 0 && xhr.responseText)) {
+            console.log('[LOCAL] Завантажено локальний файл');
+            console.log('[LOCAL] Довжина даних:', xhr.responseText.length);
             parseAndDisplayBookmarks(xhr.responseText);
           } else {
-            // Спроба 2: GitHub через CORS proxy
+            console.log('[LOCAL] Не вдалося, переходимо на GitHub...');
             loadFromGitHub();
           }
         }
       };
       xhr.onerror = function() {
+        console.log('[LOCAL] XHR error, переходимо на GitHub');
         loadFromGitHub();
       };
-      xhr.open('GET', xmlFile, true);
+      
+      const url = xmlFile + '?nocache=' + Date.now();
+      console.log('[DEBUG] Відкриваю URL:', url);
+      xhr.open('GET', url, true);
       xhr.send();
       
-      // Завантаження з GitHub через XMLHttpRequest
+      // Завантаження з GitHub (прямо з raw URL)
       function loadFromGitHub() {
+        console.log('[GITHUB] Завантажуємо з raw URL');
         const xhr2 = new XMLHttpRequest();
         xhr2.onreadystatechange = function() {
           if (xhr2.readyState === 4 && (xhr2.status === 200 || xhr2.status === 0)) {
+            console.log('[GITHUB] Завантажено з GitHub');
             parseAndDisplayBookmarks(xhr2.responseText);
           } else if (xhr2.readyState === 4) {
+            console.log('[GITHUB] Помилка:', xhr2.status);
             showError();
           }
         };
-        xhr2.onerror = showError;
-        xhr2.open('GET', githubUrl, true);
+        xhr2.onerror = function() {
+          console.log('[GITHUB] XHR error');
+          showError();
+        };
+        
+        // Унікальний URL для уникнення кешування
+        const url = rawUrl + '?t=' + Date.now() + '&v=' + Math.random();
+        console.log('[GITHUB] URL:', url);
+        xhr2.open('GET', url, true);
         xhr2.send();
       }
       
       function showError() {
         output.innerHTML = '<div class="error">Помилка: Не вдалося завантажити bookmarks.xbel ні локально, ні з GitHub</div>';
       }
+    }
+
+    // Примусове перезавантаження без кешу
+    function forceReload() {
+      // Очищуємо кеш і перезавантажуємо
+      window.location.href = window.location.href + '?nocache=' + Date.now();
     }
 
     // Запуск
