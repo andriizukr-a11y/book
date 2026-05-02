@@ -11,6 +11,12 @@ const CONFIG = {
     showCounts: true
   },
   
+  customIcons: {
+    'docs.google.com': 'data/favicons/spreadsheets.ico',
+    'sheets.google.com': 'data/favicons/spreadsheets.ico',
+
+  },
+  
   tabs: [
     'Спорт',
     'Різне'

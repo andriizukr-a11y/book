@@ -45,15 +45,30 @@ function displayBookmarks(tabId, bookmarks) {
       domain = new URL(bookmark.href).hostname;
     } catch {}
 
+    // Перевіряємо чи є кастомна іконка для цього домену
+    let iconHtml = '';
+    if (domain) {
+      if (CONFIG.customIcons && CONFIG.customIcons[domain]) {
+        // Використовуємо кастомну іконку
+        iconHtml = `<img class="bookmark-icon"
+                     src="${CONFIG.customIcons[domain]}"
+                     loading="lazy"
+                     onerror="this.style.display='none'">`;
+      } else {
+        // Використовуємо Google favicon
+        iconHtml = `<img class="bookmark-icon"
+                     src="https://www.google.com/s2/favicons?domain=${domain}&sz=32"
+                     loading="lazy"
+                     onerror="this.style.display='none'">`;
+      }
+    } else {
+      // Якщо немає домену, використовуємо стандартну іконку
+      iconHtml = `<span style="margin-right: 12px;">🔗</span>`;
+    }
+
     html += `
       <div class="bookmark-item">
-        ${domain
-          ? `<img class="bookmark-icon"
-               src="https://www.google.com/s2/favicons?domain=${domain}&sz=32"
-               loading="lazy"
-               onerror="this.style.display='none'">`
-          : `<span style="margin-right: 12px;">🔗</span>`
-        }
+        ${iconHtml}
         <a href="${bookmark.href}" target="_blank">
           ${escapeHtml(bookmark.title)}
         </a>
