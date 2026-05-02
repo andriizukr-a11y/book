@@ -71,14 +71,9 @@
   <div id="output"></div>
 
   <script>
-    const fileUrl = "https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m";
-
-    // Альтернативні CORS proxy для локальної роботи
-    const proxies = [
-      "https://api.allorigins.win/raw?url=",
-      "https://cors-anywhere.herokuapp.com/",
-      "https://thingproxy.freeboard.io/fetch/"
-    ];
+    const xmlFile = "bookmarks.xbel";
+    const githubUrl = "https://raw.githubusercontent.com/andriizukr-a11y/Links1/main/bookmarks.xbel";
+    const corsProxy = "https://api.allorigins.win/raw?url=";
 
     let allBookmarks = [];
 
@@ -134,27 +129,45 @@
     }
 
     // Завантаження файлу
-    async function loadFile() {
+    function loadFile() {
       const output = document.getElementById("output");
       
-      // Спробувати кожен proxy послідовно
-      for (const proxy of proxies) {
+      // Спроба 1: локальний файл через XMLHttpRequest
+      const xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200 || (xhr.status === 0 && xhr.responseText)) {
+            parseAndDisplayBookmarks(xhr.responseText);
+          } else {
+            // Спроба 2: GitHub через CORS proxy
+            loadFromGitHub();
+          }
+        }
+      };
+      xhr.onerror = function() {
+        loadFromGitHub();
+      };
+      xhr.open('GET', xmlFile, true);
+      xhr.send();
+      
+      // Завантаження з GitHub
+      async function loadFromGitHub() {
         try {
-          const proxyUrl = proxy + encodeURIComponent(fileUrl);
-          const response = await fetch(proxyUrl);
-          
+          const response = await fetch(corsProxy + encodeURIComponent(githubUrl));
           if (response.ok) {
             const text = await response.text();
             parseAndDisplayBookmarks(text);
-            return;
+          } else {
+            showError();
           }
         } catch (err) {
-          console.log(`Proxy ${proxy} не спрацював:`, err);
+          showError();
         }
       }
       
-      // Якщо всі proxy не спрацювали, показати помилку
-      output.innerHTML = '<div class="error">Помилка: Не вдалося завантажити файл. Спробуйте відкрити через локальний сервер або GitHub Pages.</div>';
+      function showError() {
+        output.innerHTML = '<div class="error">Помилка: Не вдалося завантажити bookmarks.xbel ні локально, ні з GitHub</div>';
+      }
     }
 
     // Запуск
