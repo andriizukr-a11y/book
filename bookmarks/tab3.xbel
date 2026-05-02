@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://pyxml.sourceforge.net/topics/dtds/xbel.dtd">
 <xbel version="1.0">
-<!--- highestId :11: for Floccus bookmark sync browser extension -->
+<!--- highestId :13: for Floccus bookmark sync browser extension -->
 
 <bookmark href="https://docs.google.com/spreadsheets/d/1mGiXyUpxdepCDvsK3nYgilotiLFbjkdKd5uySWig64g/edit?gid=212463417#gid=212463417" id="3">
   <title>Українська мова</title>
@@ -29,5 +29,11 @@
 </bookmark>
 <bookmark href="https://docs.google.com/document/d/13zznHfXxNVEWX6e8Dh9T6lWXqqThBiYL9UmK0-O0rzM/edit?tab=t.wetmkqlixts6" id="1">
   <title>Ситуація</title>
+</bookmark>
+<bookmark href="https://separator.floccus.org/?id=140740" id="12">
+  <title>⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯</title>
+</bookmark>
+<bookmark href="https://docs.google.com/spreadsheets/d/1wB4aLaBzB9y5pwpKa4j4r9jzjD-_haeOOC0CXF0hddQ/edit?gid=535335637#gid=535335637" id="13">
+  <title>Основна таблиця 2</title>
 </bookmark>
 </xbel>
