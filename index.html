@@ -20,6 +20,18 @@
     
     .bookmark-item {
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .bookmark-icon {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      min-height: 16px;
+      margin-right: 10px;
+      border-radius: 2px;
+      display: block;
     }
     
     .separator {
@@ -55,7 +67,7 @@
       </style>
 </head>
 <body>
-  <div id="output">Завантаження...</div>
+  <div id="output"></div>
 
   <script>
     const fileUrl = "https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m";
@@ -104,6 +116,7 @@
         
         return `
           <div class="bookmark-item">
+            <img class="bookmark-icon" src="https://www.google.com/s2/favicons?domain=${new URL(bookmark.href).hostname}&sz=16" alt="" onerror="this.style.display='none'">
             <a href="${bookmark.href}" target="_blank">${escapeHtml(bookmark.title)}</a>
           </div>
         `;
