@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://pyxml.sourceforge.net/topics/dtds/xbel.dtd">
 <xbel version="1.0">
-<!--- highestId :10: for Floccus bookmark sync browser extension -->
+<!--- highestId :11: for Floccus bookmark sync browser extension -->
 
-<bookmark href="https://docs.google.com/document/d/13zznHfXxNVEWX6e8Dh9T6lWXqqThBiYL9UmK0-O0rzM/edit?tab=t.wetmkqlixts6" id="1">
-  <title>Ситуація</title>
-</bookmark>
-<bookmark href="https://separator.floccus.org/?id=6047" id="2">
-  <title>⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯</title>
-</bookmark>
 <bookmark href="https://docs.google.com/spreadsheets/d/1mGiXyUpxdepCDvsK3nYgilotiLFbjkdKd5uySWig64g/edit?gid=212463417#gid=212463417" id="3">
   <title>Українська мова</title>
 </bookmark>
@@ -27,10 +21,13 @@
 <bookmark href="https://docs.google.com/spreadsheets/d/1MQoE7FjANpSrMo0LSmuAfmFOvGF2zIVwfX6j9Zmrnwk/edit?gid=1257662451#gid=1257662451" id="8">
   <title>Історична хроніка</title>
 </bookmark>
-<bookmark href="https://separator.floccus.org/?id=140740" id="9">
+<bookmark href="https://separator.floccus.org/?id=6047" id="11">
   <title>⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯</title>
 </bookmark>
 <bookmark href="https://docs.google.com/spreadsheets/d/1X0fB-3xqK3ws2YD0RcQVQr5W5SfQDt8uTn3IGlky86k/edit?gid=1166536176#gid=1166536176" id="10">
   <title>Заявки</title>
+</bookmark>
+<bookmark href="https://docs.google.com/document/d/13zznHfXxNVEWX6e8Dh9T6lWXqqThBiYL9UmK0-O0rzM/edit?tab=t.wetmkqlixts6" id="1">
+  <title>Ситуація</title>
 </bookmark>
 </xbel>
