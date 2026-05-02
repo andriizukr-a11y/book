@@ -88,10 +88,9 @@ body {
 }
 
 .separator {
-  height: 1px;
-  background: #444444;
+  height: 0;
+  border-top: 1px solid #444444;
   margin: 20px 0;
-  position: relative;
 }
 
 .bookmark-item a {
