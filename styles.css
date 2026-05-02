@@ -24,7 +24,6 @@ body {
   top: 0;
   background: #1a1a1a;
   z-index: 10;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .tab {
@@ -58,12 +57,7 @@ body {
 }
 
 .tab-count {
-  display: inline-block;
-  background: #2a2a2a;
-  border-radius: 10px;
-  padding: 0 6px;
-  font-size: 11px;
-  line-height: 18px;
+  font-size: 12px;
   color: #888;
   margin-left: 6px;
   visibility: hidden;
@@ -74,7 +68,6 @@ body {
 }
 
 .tab.active .tab-count {
-  background: rgba(74, 158, 255, 0.15);
   color: #4a9eff;
 }
 
@@ -87,8 +80,8 @@ body {
 }
 
 .bookmarks-list {
-  max-width: 800px;
-  margin: 0;
+  max-width: 700px;
+  margin: 0 auto;
 }
 
 .bookmark-item {
@@ -98,16 +91,13 @@ body {
   display: flex;
   align-items: center;
   text-decoration: none;
-  color: #c8c8c8;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  border-left: 2px solid transparent;
+  color: #e0e0e0;
+  transition: background 0.15s;
 }
 
 .bookmark-item:hover {
   background: #252525;
   color: #ffffff;
-  border-left: 2px solid #4a9eff;
-  padding-left: 8px;
 }
 
 .bookmark-icon {
