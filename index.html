@@ -2,29 +2,148 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8">
-  <title>Google Drive Data</title>
+  <title>Закладки з Google Drive</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      margin: 0;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    
+    .bookmarks-list {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .bookmark-item {
+      margin-bottom: 8px;
+    }
+    
+    .separator {
+      height: 1px;
+      background: #444444;
+      margin: 20px 0;
+      position: relative;
+    }
+    
+    .bookmark-item a {
+      text-decoration: none;
+      color: #e0e0e0;
+      font-weight: 400;
+      font-size: 15px;
+    }
+    
+    .bookmark-item a:hover {
+      color: #ffffff;
+      text-decoration: underline;
+    }
+    
+    .loading, .error, .no-results {
+      text-align: center;
+      padding: 40px;
+      color: #888888;
+      font-size: 16px;
+    }
+    
+    .error {
+      color: #ff6b6b;
+    }
+    
+      </style>
 </head>
 <body>
-  <h1>Дані з Google Drive</h1>
-  <pre id="output">Завантаження...</pre>
+  <div id="output">Завантаження...</div>
 
   <script>
     const fileUrl = "https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m";
 
-    // безкоштовний CORS proxy
-    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(fileUrl);
+    // Альтернативні CORS proxy для локальної роботи
+    const proxies = [
+      "https://api.allorigins.win/raw?url=",
+      "https://cors-anywhere.herokuapp.com/",
+      "https://thingproxy.freeboard.io/fetch/"
+    ];
 
-    async function loadFile() {
-      try {
-        const response = await fetch(proxyUrl);
-        const text = await response.text();
-        document.getElementById("output").textContent = text;
-      } catch (err) {
-        document.getElementById("output").textContent =
-          "Помилка завантаження: " + err;
+    let allBookmarks = [];
+
+    // Парсинг XML та відображення закладок
+    function parseAndDisplayBookmarks(xmlText) {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+      
+      const bookmarks = xmlDoc.getElementsByTagName("bookmark");
+      allBookmarks = [];
+      
+      for (let bookmark of bookmarks) {
+        const href = bookmark.getAttribute("href");
+        const title = bookmark.getElementsByTagName("title")[0]?.textContent || "Без назви";
+        
+        allBookmarks.push({ title, href });
       }
+      
+      displayBookmarks(allBookmarks);
     }
 
+    // Відображення закладок
+    function displayBookmarks(bookmarks) {
+      const output = document.getElementById("output");
+      
+      if (bookmarks.length === 0) {
+        output.innerHTML = '<div class="no-results">Закладки не знайдено</div>';
+        return;
+      }
+      
+      const bookmarksHTML = bookmarks.map(bookmark => {
+        // Перевіряємо, чи це сепаратор
+        if (bookmark.href.includes('separator.floccus.org')) {
+          return `<div class="separator"></div>`;
+        }
+        
+        return `
+          <div class="bookmark-item">
+            <a href="${bookmark.href}" target="_blank">${escapeHtml(bookmark.title)}</a>
+          </div>
+        `;
+      }).join('');
+      
+      output.innerHTML = `<div class="bookmarks-list">${bookmarksHTML}</div>`;
+    }
+
+    // Безпечне відображення HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Завантаження файлу
+    async function loadFile() {
+      const output = document.getElementById("output");
+      
+      // Спробувати кожен proxy послідовно
+      for (const proxy of proxies) {
+        try {
+          const proxyUrl = proxy + encodeURIComponent(fileUrl);
+          const response = await fetch(proxyUrl);
+          
+          if (response.ok) {
+            const text = await response.text();
+            parseAndDisplayBookmarks(text);
+            return;
+          }
+        } catch (err) {
+          console.log(`Proxy ${proxy} не спрацював:`, err);
+        }
+      }
+      
+      // Якщо всі proxy не спрацювали, показати помилку
+      output.innerHTML = '<div class="error">Помилка: Не вдалося завантажити файл. Спробуйте відкрити через локальний сервер або GitHub Pages.</div>';
+    }
+
+    // Запуск
     loadFile();
   </script>
 </body>
