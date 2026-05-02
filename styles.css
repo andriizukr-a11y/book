@@ -85,6 +85,12 @@ body {
   border-radius: 3px;
   display: block;
   object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.2s ease-in;
+}
+
+.bookmark-icon[src] {
+  opacity: 1;
 }
 
 .separator {

@@ -86,61 +86,22 @@ function openTabFromHash() {
 }
 
 async function loadFileData(path) {
-  // Спроба 1: GitHub API
-  const apiUrl = `https://api.github.com/repos/${CONFIG.repo}/contents/${path}`;
-
+  // Завантаження з локальної папки (миттєво)
+  const localUrl = path;
+  
   try {
-    console.log("Спроба завантаження через API:", apiUrl);
-    const response = await fetch(apiUrl);
-
+    console.log("Завантаження з локальної папки:", localUrl);
+    const response = await fetch(localUrl);
+    
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    
-    if (!data.content) {
-      throw new Error("Пустий контент у відповіді");
+      throw new Error(`Local HTTP ${response.status}: ${response.statusText}`);
     }
     
-    // Правильне декодування UTF-8 з base64
-    const binaryString = atob(data.content.replace(/\n/g, ''));
-    const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
-    }
-    const xmlText = new TextDecoder('utf-8').decode(bytes);
+    const xmlText = await response.text();
     return parseBookmarks(xmlText);
-
-  } catch (apiErr) {
-    console.warn("API не спрацював, пробуємо raw GitHub:", apiErr.message);
-    
-    // Спроба 2: Raw GitHub
-    try {
-      const rawUrl = `https://raw.githubusercontent.com/${CONFIG.repo}/main/${path}`;
-      console.log("Спроба завантаження raw:", rawUrl);
-      
-      const response = await fetch(rawUrl);
-      
-      if (!response.ok) {
-        throw new Error(`Raw HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const xmlText = await response.text();
-      return parseBookmarks(xmlText);
-      
-    } catch (rawErr) {
-      console.error("Обидва методи не спрацювали для:", path, rawErr);
-      
-      // Показуємо помилку користувачеві
-      const tabsContainer = document.getElementById('tabs-container');
-      if (tabsContainer && !tabsContainer.querySelector('.error')) {
-        tabsContainer.innerHTML += 
-          `<div class="error">Не вдалося завантажити ${path}: ${rawErr.message}</div>`;
-      }
-      
-      return [];
-    }
+  } catch (localError) {
+    console.error("Не вдалося завантажити локальний файл:", localError.message);
+    throw new Error(`Не вдалося завантажити ${path}: ${localError.message}`);
   }
 }
 
@@ -151,19 +112,19 @@ async function loadDirectory() {
     tabsContainer.innerHTML = '';
     createTabs();
 
-    // Чекаємо на завантаження ВСІХ файлів
+    // Чекаємо на завантаження ВСІХ файлів та іконок
     const loadPromises = CONFIG.tabs.map(async (tabName, index) => {
       const fileName = `tab${index + 1}.xbel`;
       const id = fileId(fileName);
       const bookmarks = await loadFileData(`${CONFIG.dir}/${fileName}`);
       bookmarksData[id].bookmarks = bookmarks;
-      displayBookmarks(id, bookmarks);
-      return bookmarks;
+      const iconPromise = displayBookmarks(id, bookmarks);
+      return iconPromise;
     });
 
     await Promise.all(loadPromises);
 
-    // Тільки після завантаження всіх даних ховаємо прелоадер
+    // Тільки після завантаження всіх даних та іконок ховаємо прелоадер
     document.getElementById('preloader').classList.add('hidden');
 
   } catch (err) {

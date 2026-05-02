@@ -29,10 +29,11 @@ function displayBookmarks(tabId, bookmarks) {
 
   if (!bookmarks.length) {
     output.innerHTML = '<div class="no-results">Закладки не знайдено</div>';
-    return;
+    return Promise.resolve();
   }
 
   let html = '<div class="bookmarks-list">';
+  const iconPromises = [];
 
   for (const bookmark of bookmarks) {
     if (bookmark.href.includes('separator.floccus.org')) {
@@ -45,24 +46,25 @@ function displayBookmarks(tabId, bookmarks) {
       domain = new URL(bookmark.href).hostname;
     } catch {}
 
-    // Перевіряємо чи є кастомна іконка для цього домену
+    // Генеруємо HTML для іконки
     let iconHtml = '';
     if (domain) {
+      let iconSrc = '';
       if (CONFIG.customIcons && CONFIG.customIcons[domain]) {
-        // Використовуємо кастомну іконку
-        iconHtml = `<img class="bookmark-icon"
-                     src="${CONFIG.customIcons[domain]}"
-                     loading="lazy"
-                     onerror="this.style.display='none'">`;
+        iconSrc = CONFIG.customIcons[domain];
       } else {
-        // Використовуємо Google favicon
-        iconHtml = `<img class="bookmark-icon"
-                     src="https://www.google.com/s2/favicons?domain=${domain}&sz=32"
-                     loading="lazy"
-                     onerror="this.style.display='none'">`;
+        iconSrc = `https://${domain}/favicon.ico`;
       }
+      
+      // Створюємо Promise для завантаження іконки з fallback
+      const iconPromise = loadIconWithFallback(domain, iconSrc);
+      iconPromises.push(iconPromise);
+      
+      iconHtml = `<img class="bookmark-icon"
+                   src="${iconSrc}"
+                   data-domain="${domain}"
+                   id="icon-${domain.replace(/[^a-zA-Z0-9]/g, '-')}">`;
     } else {
-      // Якщо немає домену, використовуємо стандартну іконку
       iconHtml = `<span style="margin-right: 12px;">🔗</span>`;
     }
 
@@ -78,10 +80,76 @@ function displayBookmarks(tabId, bookmarks) {
 
   html += '</div>';
   output.innerHTML = html;
+  
+  // Повертаємо Promise, який вирішується коли всі іконки завантажилися з fallback
+  return Promise.all(iconPromises);
+}
+
+// Функція для завантаження іконки з fallback і оновлення src
+function loadIconWithFallback(domain, initialSrc) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = initialSrc;
+    img.onload = resolve;
+    img.onerror = () => {
+      // Якщо .ico не завантажився, пробуємо .png
+      if (initialSrc.endsWith('/favicon.ico')) {
+        const pngImg = new Image();
+        pngImg.src = `https://${domain}/favicon.png`;
+        pngImg.onload = () => {
+          // Оновлюємо src в DOM
+          const domImg = document.getElementById(`icon-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`);
+          if (domImg) domImg.src = `https://${domain}/favicon.png`;
+          resolve();
+        };
+        pngImg.onerror = () => {
+          // Якщо .png теж не спрацював, завантажуємо default.png
+          const defaultImg = new Image();
+          defaultImg.src = 'data/favicons/default.png';
+          defaultImg.onload = () => {
+            // Оновлюємо src в DOM
+            const domImg = document.getElementById(`icon-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`);
+            if (domImg) domImg.src = 'data/favicons/default.png';
+            resolve();
+          };
+          defaultImg.onerror = resolve;
+        };
+      } else if (initialSrc.endsWith('/favicon.png')) {
+        // Якщо це .png і не спрацював, завантажуємо default.png
+        const defaultImg = new Image();
+        defaultImg.src = 'data/favicons/default.png';
+        defaultImg.onload = () => {
+          // Оновлюємо src в DOM
+          const domImg = document.getElementById(`icon-${domain.replace(/[^a-zA-Z0-9]/g, '-')}`);
+          if (domImg) domImg.src = 'data/favicons/default.png';
+          resolve();
+        };
+        defaultImg.onerror = resolve;
+      } else {
+        resolve;
+      }
+    };
+  });
 }
 
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
   return div.innerHTML;
+}
+
+// Fallback для іконок - замінює на default.png
+function handleFaviconError(img) {
+  const domain = img.dataset?.domain || '';
+  const currentSrc = img.src;
+  
+  // Якщо це перша спроба (.ico), пробуємо .png
+  if (currentSrc.endsWith('/favicon.ico')) {
+    img.src = `https://${domain}/favicon.png`;
+    return;
+  }
+  
+  // Замінюємо на default.png
+  img.src = 'data/favicons/default.png';
+  img.onerror = null; // Запобігаємо нескінченному циклу
 }
