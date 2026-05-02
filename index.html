@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Мої закладки</title>
+<style>
+body {
+    font-family: Arial;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 20px;
+}
+li {
+    margin: 8px 0;
+    padding: 10px;
+    background: #1e293b;
+    border-radius: 10px;
+}
+a {
+    color: #38bdf8;
+    text-decoration: none;
+}
+</style>
+</head>
+<body>
+
+<h1>🔖 Мої закладки</h1>
+<ul id="bookmarks">Завантаження...</ul>
+
+<script>
+async function loadFromFile() {
+    const list = document.getElementById("bookmarks");
+    
+    try {
+        list.innerHTML = `<li>🔄 Пробую різні методи завантаження...</li>`;
+        
+        // Метод 1: Прямий запит (може не працювати через CORS)
+        try {
+            list.innerHTML = `<li>🔄 Метод 1: Прямий запит...</li>`;
+            const response = await fetch("https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m");
+            if (response.ok) {
+                const text = await response.text();
+                console.log("✅ Прямий запит спрацював!");
+                displayData(text);
+                return;
+            }
+        } catch (e) {
+            console.log("Прямий запит заблоковано CORS");
+            list.innerHTML = `<li>❌ Метод 1: Прямий запит заблоковано CORS</li>`;
+        }
+        
+        // Метод 2: Через CORS Anywhere
+        try {
+            list.innerHTML = `<li>🔄 Метод 2: CORS Anywhere...</li>`;
+            const corsUrl = `https://cors-anywhere.herokuapp.com/https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m`;
+            const response = await fetch(corsUrl);
+            if (response.ok) {
+                const text = await response.text();
+                console.log("✅ CORS Anywhere спрацював!");
+                displayData(text);
+                return;
+            }
+        } catch (e) {
+            console.log("CORS Anywhere не спрацював");
+            list.innerHTML = `<li>❌ Метод 2: CORS Anywhere не спрацював</li>`;
+        }
+        
+        // Метод 3: Через allorigins
+        try {
+            list.innerHTML = `<li>🔄 Метод 3: AllOrigins...</li>`;
+            const alloriginsUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent('https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m')}`;
+            const response = await fetch(alloriginsUrl);
+            if (response.ok) {
+                const text = await response.text();
+                console.log("✅ AllOrigins спрацював!");
+                displayData(text);
+                return;
+            }
+        } catch (e) {
+            console.log("AllOrigins не спрацював");
+            list.innerHTML = `<li>❌ Метод 3: AllOrigins не спрацював</li>`;
+        }
+        
+        // Метод 4: Через JSONP
+        try {
+            list.innerHTML = `<li>🔄 Метод 4: JSONP...</li>`;
+            const jsonpUrl = `https://jsonp.afeld.me/?url=${encodeURIComponent('https://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m')}`;
+            const response = await fetch(jsonpUrl);
+            if (response.ok) {
+                const jsonData = await response.json();
+                const text = jsonData.data || jsonData.content || JSON.stringify(jsonData);
+                console.log("✅ JSONP проксі спрацював!");
+                displayData(text);
+                return;
+            }
+        } catch (e) {
+            console.log("JSONP проксі не спрацював");
+            list.innerHTML = `<li>❌ Метод 4: JSONP не спрацював</li>`;
+        }
+        
+        throw new Error("Жоден метод не спрацював");
+        
+    } catch (error) {
+        console.error("❌ Помилка:", error);
+        list.innerHTML = `<li>❌ Помилка завантаження: ${error.message}</li>`;
+        list.innerHTML += `<li>💡 Google Таблиці працюють бо вони на сервері</li>`;
+        list.innerHTML += `<li>🔄 Браузер має CORS обмеження</li>`;
+        list.innerHTML += `<li>🔗 Спробуйте: https://r.jina.ai/http://drive.google.com/uc?export=download&id=1B_xoTwR5w_ppx6eGsyn6uDlsYK4Y6b9m</li>`;
+    }
+}
+
+function displayData(text) {
+    const list = document.getElementById("bookmarks");
+    console.log("Отримано текст:", text.substring(0, 200));
+    console.log("Повний розмір:", text.length, "символів");
+    
+    // Показуємо сирі дані з файлу
+    list.innerHTML = `<li><pre style="white-space: pre-wrap; word-wrap: break-word; background: #1e293b; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; max-height: 400px; overflow-y: auto;">${text}</pre></li>`;
+    
+    console.log("✅ Показано дані");
+}
+
+// Завантажуємо при відкритті
+loadFromFile();
+</script>
+
+</body>
+</html>
