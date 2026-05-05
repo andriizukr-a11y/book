@@ -68,7 +68,7 @@ function displayBookmarks(tabId, bookmarks) {
       <a class="bookmark-item" href="${bookmark.href}" target="_blank" rel="noopener noreferrer">
         ${iconHtml}
         <span class="bookmark-text">
-          <span class="bookmark-title">${escapeHtml(cleanTitle(bookmark.title))}</span>
+          <span class="bookmark-title" data-title="${escapeHtml(bookmark.title)}">${escapeHtml(cleanTitle(bookmark.title))}</span>
           ${domainLabel}
         </span>
       </a>
@@ -78,6 +78,19 @@ function displayBookmarks(tabId, bookmarks) {
   html += '</div>';
   output.innerHTML = html;
   loadFavicons(output);
+  updateTruncatedTitles(output);
+}
+
+function updateTruncatedTitles(container) {
+  container.querySelectorAll('.bookmark-title').forEach(span => {
+    const anchor = span.closest('a');
+    if (!anchor) return;
+    if (span.scrollWidth > span.clientWidth) {
+      anchor.title = span.dataset.title;
+    } else {
+      anchor.removeAttribute('title');
+    }
+  });
 }
 
 function cleanTitle(title) {
