@@ -26,7 +26,7 @@ function createTabs() {
     // Формуємо контент кнопки
     let tabContent = tabName;
     if (CONFIG.ui.showCounts) {
-      tabContent += ` <span class="tab-count" id="count-${id}">(0)</span>`;
+      tabContent += ` <span class="tab-count" id="count-${id}">0</span>`;
     }
     
     tabBtn.innerHTML = tabContent;

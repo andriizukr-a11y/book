@@ -26,7 +26,7 @@ function displayBookmarks(tabId, bookmarks) {
 
   const realBookmarks = bookmarks.filter(b => !b.href.includes('separator.floccus.org'));
   if (countEl) {
-    countEl.textContent = `(${realBookmarks.length})`;
+    countEl.textContent = `${realBookmarks.length}`;
     countEl.classList.add('ready');
   }
 
@@ -65,10 +65,10 @@ function displayBookmarks(tabId, bookmarks) {
 
     const domainLabel = domain ? `<span class="bookmark-domain">${domain}</span>` : '';
     html += `
-      <a class="bookmark-item" href="${bookmark.href}" target="_blank" rel="noopener noreferrer">
+      <a class="bookmark-item" href="${bookmark.href}" target="_blank" rel="noopener noreferrer" title="${escapeHtml(bookmark.title)}">
         ${iconHtml}
         <span class="bookmark-text">
-          <span class="bookmark-title" data-title="${escapeHtml(bookmark.title)}">${escapeHtml(cleanTitle(bookmark.title))}</span>
+          <span class="bookmark-title">${escapeHtml(cleanTitle(bookmark.title))}</span>
           ${domainLabel}
         </span>
       </a>
@@ -78,19 +78,6 @@ function displayBookmarks(tabId, bookmarks) {
   html += '</div>';
   output.innerHTML = html;
   loadFavicons(output);
-  updateTruncatedTitles(output);
-}
-
-function updateTruncatedTitles(container) {
-  container.querySelectorAll('.bookmark-title').forEach(span => {
-    const anchor = span.closest('a');
-    if (!anchor) return;
-    if (span.scrollWidth > span.clientWidth) {
-      anchor.title = span.dataset.title;
-    } else {
-      anchor.removeAttribute('title');
-    }
-  });
 }
 
 function cleanTitle(title) {
