@@ -19,7 +19,7 @@ body {
 /* Таби */
 .tabs {
   display: flex;
-  gap: 8px;
+  gap: 0;
   margin-bottom: 30px;
   border-bottom: 1px solid #2a2a2a;
   padding-bottom: 0;
@@ -76,10 +76,20 @@ body {
 }
 
 .tab-count {
-  font-size: 12px;
-  color: #888;
+  font-size: 11px;
+  color: #555;
+  background: #252525;
+  border: none;
+  border-radius: 20px;
+  padding: 1px 6px;
   margin-left: 6px;
   visibility: hidden;
+  position: relative;
+  line-height: 17px;
+  display: inline-block;
+  letter-spacing: 0.2px;
+  min-width: 20px;
+  text-align: center;
 }
 
 .tab-count.ready {
@@ -87,7 +97,10 @@ body {
 }
 
 .tab.active .tab-count {
-  color: #4a9eff;
+  color: #ffffff;
+  background: #4a9eff;
+  font-weight: 400;
+  top: -1px;
 }
 
 .tab-content {
