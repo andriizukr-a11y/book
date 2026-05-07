@@ -48,6 +48,11 @@ function createGistSettingsModal() {
           <small class="gist-settings-hint">
             Якщо у вас вже є Gist з нотатками, вставте його ID
           </small>
+          <div id="gist-link-container" style="margin-top: 5px;">
+            <a id="gist-link" href="#" target="_blank" style="font-size: 13px; color: #007bff; text-decoration: none;">
+              ↗ Відкрити Gist
+            </a>
+          </div>
         </div>
 
           <div class="gist-settings-actions">
@@ -108,6 +113,8 @@ function createGistSettingsModal() {
 
   const tokenInput = modal.querySelector('#gist-token');
   const gistIdInput = modal.querySelector('#gist-id');
+  const gistLink = modal.querySelector('#gist-link');
+  const gistLinkContainer = modal.querySelector('#gist-link-container');
   
   const fileNameInput = modal.querySelector('#file-name');
 
@@ -130,6 +137,20 @@ function createGistSettingsModal() {
   function hideFileStatus() {
     fileStatusEl.style.display = 'none';
   }
+
+  function updateGistLink() {
+    const gistId = gistIdInput.value.trim();
+    if (gistId) {
+      gistLink.href = `https://gist.github.com/${gistId}`;
+      gistLinkContainer.style.display = 'block';
+    } else {
+      gistLinkContainer.style.display = 'none';
+    }
+  }
+
+  // Initialize gist link
+  updateGistLink();
+  gistIdInput.addEventListener('input', updateGistLink);
 
   syncMethodRadios.forEach(radio => {
     radio.onchange = (e) => {
@@ -235,13 +256,14 @@ function createGistSettingsModal() {
       tempStorage.config.token = token;
       tempStorage.config.gistId = gistIdInput.value.trim();
       tempStorage.config.enabled = true;
-      
+
       await tempStorage.syncToGist();
-      
+
       if (tempStorage.config.gistId && !gistIdInput.value.trim()) {
         gistIdInput.value = tempStorage.config.gistId;
+        updateGistLink();
       }
-      
+
       showStatus('✓ Синхронізація успішна!', 'success');
     } catch (error) {
       showStatus(`✗ Помилка: ${error.message}`, 'error');

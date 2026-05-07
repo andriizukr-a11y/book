@@ -29,8 +29,27 @@ function saveNotesData(data) {
 
 function getNotesTopics() {
   try {
-    const topics = JSON.parse(localStorage.getItem(NOTES_TOPICS_KEY));
-    if (topics && topics.length) return topics;
+    const topics = JSON.parse(localStorage.getItem(NOTES_TOPICS_KEY)) || [];
+    const data = getNotesData();
+    let changed = false;
+
+    // Add orphaned keys from notes_data that are missing in topics
+    for (const key of Object.keys(data)) {
+      if (key && !topics.includes(key)) {
+        topics.push(key);
+        changed = true;
+      }
+    }
+
+    // Remove topics that have no data (cleanup)
+    const filtered = topics.filter(t => t && data.hasOwnProperty(t));
+    if (filtered.length !== topics.length) changed = true;
+
+    if (changed && filtered.length) {
+      localStorage.setItem(NOTES_TOPICS_KEY, JSON.stringify(filtered));
+    }
+
+    if (filtered.length) return filtered;
   } catch {}
   return [getMainGroupName()];
 }
@@ -272,6 +291,9 @@ function renderNotesUI(container) {
   `;
 
   bindNotesEvents(container);
+  if (typeof addGistSettingsButton === 'function') {
+    setTimeout(() => addGistSettingsButton(), 0);
+  }
 }
 
 function bindNotesEvents(container) {
