@@ -2,11 +2,13 @@
 
 const GIST_CONFIG_KEY = 'gist_config';
 const GIST_SYNC_INTERVAL = 30000; // 30 seconds
+const GIST_DEBOUNCE_MS = 2000; // 2 seconds debounce for immediate sync
 
 class GistStorage {
   constructor() {
     this.config = this.loadConfig();
     this.syncTimer = null;
+    this.debounceTimer = null;
     this.isSyncing = false;
     this.lastSyncTime = null;
     this.pendingChanges = false;
@@ -213,6 +215,19 @@ class GistStorage {
 
   markPendingChanges() {
     this.pendingChanges = true;
+    this.scheduleImmediateSync();
+  }
+
+  scheduleImmediateSync() {
+    if (!this.isEnabled()) return;
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      if (this.pendingChanges && !this.isSyncing) {
+        this.syncToGist().catch(err => {
+          console.error('Immediate sync failed:', err);
+        });
+      }
+    }, GIST_DEBOUNCE_MS);
   }
 
   startAutoSync() {
@@ -237,6 +252,10 @@ class GistStorage {
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
     }
   }
 
