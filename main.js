@@ -86,6 +86,11 @@ function injectHead() {
   styles.rel = 'stylesheet';
   styles.href = 'styles.css';
   document.head.appendChild(styles);
+
+  const notesStyles = document.createElement('link');
+  notesStyles.rel = 'stylesheet';
+  notesStyles.href = 'notes/styles.css';
+  document.head.appendChild(notesStyles);
 }
 
 function injectBody() {
@@ -118,7 +123,12 @@ function loadScript(src) {
   await loadScript('bookmarks.js');
   await loadScript('gist-storage.js');
   await loadScript('file-storage.js');
-  await loadScript('notes.js');
+  await loadScript('notes/storage.js');
+  await loadScript('notes/utils.js');
+  await loadScript('notes/checklists.js');
+  await loadScript('notes/ui.js');
+  await loadScript('notes/events.js');
+  await loadScript('notes/notes.js');
   await loadScript('gist-settings.js');
   await loadScript('tasks.js');
   await loadScript('app.js');
