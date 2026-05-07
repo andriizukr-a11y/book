@@ -108,9 +108,12 @@ class GistStorage {
       throw new Error('Notes data file not found in gist');
     }
 
+    console.log('Gist file truncated:', file.truncated, 'content length:', file.size, 'raw_url:', file.raw_url);
+
     let content = file.content;
 
     if (file.truncated) {
+      console.log('Fetching full content via raw API...');
       const rawResponse = await fetch(`https://api.github.com/gists/${this.config.gistId}`, {
         headers: {
           'Authorization': `token ${this.config.token}`,
@@ -119,8 +122,10 @@ class GistStorage {
       });
       if (!rawResponse.ok) throw new Error('Failed to load full gist content');
       content = await rawResponse.text();
+      console.log('Raw content length:', content.length);
     }
 
+    console.log('Parsing JSON, content preview:', content.substring(0, 200));
     return JSON.parse(content);
   }
 

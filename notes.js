@@ -22,6 +22,9 @@ function saveNotesData(data) {
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
   }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
+  }
 }
 
 function getNotesTopics() {
@@ -36,6 +39,9 @@ function saveNotesTopics(topics) {
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
   }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
+  }
 }
 
 function getNotesTimestamps() {
@@ -46,6 +52,9 @@ function saveNotesTimestamps(ts) {
   localStorage.setItem(NOTES_TIMESTAMPS_KEY, JSON.stringify(ts)); 
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
+  }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
   }
 }
 
@@ -84,6 +93,9 @@ function saveNotesGroups(groups) {
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
   }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
+  }
 }
 
 function getTopicGroups() {
@@ -113,6 +125,9 @@ function saveTopicGroups(map) {
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
   }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
+  }
 }
 
 function getTopicGroup(topic) { return getTopicGroups()[topic] || getMainGroupName(); }
@@ -127,6 +142,9 @@ function saveCollapsedGroups(arr) {
   localStorage.setItem(NOTES_COLLAPSED_KEY, JSON.stringify(arr));
   if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
     gistStorage.markPendingChanges();
+  }
+  if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+    fileStorage.markPendingChanges();
   }
 }
 
@@ -188,6 +206,9 @@ function initNotes() {
       addGistSettingsButton();
       if (gistStorage.isEnabled()) {
         gistStorage.startAutoSync();
+      }
+      if (fileStorage.isEnabled()) {
+        fileStorage.startAutoSync();
       }
     }, 100);
   }
