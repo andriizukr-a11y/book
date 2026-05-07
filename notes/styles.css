@@ -119,11 +119,6 @@
   padding: 1px 6px;
   min-width: 18px;
   text-align: center;
-  position: relative;
-}
-
-.notes-group-count:hover {
-  color: transparent;
 }
 
 .notes-group-topics {
