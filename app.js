@@ -105,6 +105,10 @@ function switchTab(tabId) {
   localStorage.setItem('lastTab', tabId);
 
   window.location.hash = tabId;
+
+  if (tabId === 'tasks') {
+    setTimeout(() => document.getElementById('tasks-add-input')?.focus(), 0);
+  }
 }
 
 function openTabFromHash() {

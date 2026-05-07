@@ -1,9 +1,7 @@
 /* ---------- TASKS ---------- */
 
 const TASKS_STORAGE_KEY = 'tasks_data';
-const SAVE_DELAY = 500;
-
-let tasksSaveTimer = null;
+const TASKS_DATE_KEY = 'tasks_last_date';
 
 function getTasksData() {
   try {
@@ -18,7 +16,34 @@ function saveTasksData(data) {
 function initTasks() {
   const output = document.getElementById('output-tasks');
   if (!output) return;
+  checkDailyReset();
   renderTasksUI(output);
+  scheduleMidnightReset();
+}
+
+function checkDailyReset() {
+  const today = new Date().toDateString();
+  const lastDate = localStorage.getItem(TASKS_DATE_KEY);
+  if (lastDate !== today) {
+    const tasks = getTasksData();
+    let changed = false;
+    tasks.forEach(t => { if (t.done) { t.done = false; changed = true; } });
+    if (changed) saveTasksData(tasks);
+    localStorage.setItem(TASKS_DATE_KEY, today);
+  }
+}
+
+function scheduleMidnightReset() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setHours(24, 0, 0, 0);
+  const msUntilMidnight = midnight - now;
+  setTimeout(() => {
+    checkDailyReset();
+    const output = document.getElementById('output-tasks');
+    if (output) renderTasksUI(output);
+    scheduleMidnightReset();
+  }, msUntilMidnight);
 }
 
 function renderTasksUI(container) {
@@ -34,7 +59,7 @@ function renderTasksUI(container) {
           <span class="task-checkmark"></span>
         </label>
         <span class="task-text${textClass}">${escapeHtml(task.text)}</span>
-        <button class="task-delete" title="Видалити">×</button>
+        <button class="task-delete" title="Видалити">&times;</button>
       </div>
     `;
   }).join('');
@@ -48,11 +73,13 @@ function renderTasksUI(container) {
   const progressHtml = totalCount > 0
     ? `<div class="tasks-progress">
         <div class="tasks-progress-bar">
-          <div class="tasks-progress-fill" style="width:${totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0}%"></div>
+          <div class="tasks-progress-fill" style="width:${Math.round((doneCount / totalCount) * 100)}%"></div>
         </div>
         <span class="tasks-progress-text">${doneCount} з ${totalCount}</span>
       </div>`
     : '';
+
+  const wasFocused = document.activeElement && document.activeElement.id === 'tasks-add-input';
 
   container.innerHTML = `
     <div class="tasks-container">
@@ -62,33 +89,77 @@ function renderTasksUI(container) {
         ${emptyHtml}
       </div>
       <div class="tasks-add-wrapper">
-        <input type="text" class="tasks-add-input" id="tasks-add-input" placeholder="Нове завдання..." autocomplete="off">
-        <button class="tasks-add-btn" id="tasks-add-btn">Додати</button>
+        <textarea class="tasks-add-input" id="tasks-add-input" placeholder="Нове завдання..." autocomplete="off" rows="1"></textarea>
       </div>
     </div>
   `;
+
+  if (wasFocused) {
+    const newInput = container.querySelector('#tasks-add-input');
+    if (newInput) setTimeout(() => newInput.focus(), 0);
+  }
 
   bindTasksEvents(container);
 }
 
 function bindTasksEvents(container) {
   const addInput = container.querySelector('#tasks-add-input');
-  const addBtn = container.querySelector('#tasks-add-btn');
 
-  function addTask() {
-    const text = addInput.value.trim();
-    if (!text) return;
+  function addTasks() {
+    const raw = addInput.value.trim();
+    if (!raw) return;
+    const lines = raw.split(/\n/).map(l => l.trim()).filter(l => l);
+    if (lines.length === 0) return;
     const tasks = getTasksData();
-    tasks.push({ text, done: false });
+    lines.forEach(text => tasks.push({ text, done: false }));
     saveTasksData(tasks);
     addInput.value = '';
+    addInput.style.height = 'auto';
     renderTasksUI(container);
-    addInput.focus();
+    container.querySelector('#tasks-add-input')?.focus();
   }
 
-  addBtn.addEventListener('click', addTask);
   addInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); addTask(); }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      addTasks();
+    }
+  });
+
+  addInput.addEventListener('paste', () => {
+    setTimeout(() => {
+      if (addInput.value.includes('\n')) {
+        addTasks();
+      }
+    }, 0);
+  });
+
+  addInput.addEventListener('input', () => {
+    addInput.style.height = 'auto';
+    addInput.style.height = addInput.scrollHeight + 'px';
+  });
+
+  container.querySelectorAll('.task-item').forEach(item => {
+    let clickTimer = null;
+
+    item.addEventListener('click', e => {
+      if (e.target.closest('.task-delete') || e.target.closest('.task-checkbox-label') || e.target.closest('.task-edit-input')) return;
+      if (clickTimer) {
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        return;
+      }
+      clickTimer = setTimeout(() => {
+        clickTimer = null;
+        const index = parseInt(item.dataset.index);
+        const tasks = getTasksData();
+        if (tasks[index]) {
+          tasks[index].done = !tasks[index].done;
+          saveTasksData(tasks);
+          renderTasksUI(container);
+        }
+      }, 250);
+    });
   });
 
   container.querySelectorAll('.task-checkbox').forEach(cb => {

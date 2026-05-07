@@ -53,13 +53,58 @@ async function checkIP() {
   }
 }
 
-// Ініціалізація після завантаження всіх модулів
-document.addEventListener('DOMContentLoaded', async () => {
+function injectHead() {
+  document.title = CONFIG.ui.titleSuffix;
+
+  const favicon = document.createElement('link');
+  favicon.rel = 'icon';
+  favicon.href = 'data/favicon.png';
+  favicon.type = 'image/png';
+  document.head.appendChild(favicon);
+
+  const preload = document.createElement('link');
+  preload.rel = 'preload';
+  preload.href = 'data/favicons/default.png';
+  preload.as = 'image';
+  document.head.appendChild(preload);
+
+  const styles = document.createElement('link');
+  styles.rel = 'stylesheet';
+  styles.href = 'styles.css';
+  document.head.appendChild(styles);
+}
+
+function injectBody() {
+  document.body.insertAdjacentHTML('beforeend',
+    '<div class="tabs" id="tabs-container"></div>' +
+    '<div id="contents-container"></div>'
+  );
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = reject;
+    document.body.appendChild(s);
+  });
+}
+
+(async () => {
   const allowed = await checkIP();
   if (!allowed) {
-    document.getElementById('preloader').classList.add('hidden');
-    document.body.innerHTML = '';
+    window.location.replace('about:blank');
     return;
   }
+
+  injectHead();
+  injectBody();
+
+  await loadScript('bookmarks.js');
+  await loadScript('notes.js');
+  await loadScript('tasks.js');
+  await loadScript('app.js');
+
   loadDirectory();
-});
+})();
