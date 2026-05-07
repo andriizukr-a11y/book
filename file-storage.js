@@ -2,11 +2,13 @@
 
 const FILE_CONFIG_KEY = 'file_config';
 const FILE_SYNC_INTERVAL = 30000; // 30 seconds
+const FILE_DEBOUNCE_MS = 2000; // 2 seconds debounce for immediate sync
 
 class FileStorage {
   constructor() {
     this.config = this.loadConfig();
     this.syncTimer = null;
+    this.debounceTimer = null;
     this.isSyncing = false;
     this.lastSyncTime = null;
     this.pendingChanges = false;
@@ -157,6 +159,19 @@ class FileStorage {
 
   markPendingChanges() {
     this.pendingChanges = true;
+    this.scheduleImmediateSync();
+  }
+
+  scheduleImmediateSync() {
+    if (!this.isEnabled() || !this.fileHandle) return;
+    if (this.debounceTimer) clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => {
+      if (this.pendingChanges && !this.isSyncing) {
+        this.syncToFile().catch(err => {
+          console.error('Immediate file sync failed:', err);
+        });
+      }
+    }, FILE_DEBOUNCE_MS);
   }
 
   startAutoSync() {
@@ -181,6 +196,10 @@ class FileStorage {
     if (this.syncTimer) {
       clearInterval(this.syncTimer);
       this.syncTimer = null;
+    }
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
     }
   }
 
