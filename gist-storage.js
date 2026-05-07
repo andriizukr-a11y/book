@@ -12,6 +12,7 @@ class GistStorage {
     this.isSyncing = false;
     this.lastSyncTime = null;
     this.pendingChanges = false;
+    this._suppressAutoSync = false;
   }
 
   loadConfig() {
@@ -115,13 +116,8 @@ class GistStorage {
     let content = file.content;
 
     if (file.truncated) {
-      console.log('Fetching full content via raw API...');
-      const rawResponse = await fetch(`https://api.github.com/gists/${this.config.gistId}`, {
-        headers: {
-          'Authorization': `token ${this.config.token}`,
-          'Accept': 'application/vnd.github.v3.raw'
-        }
-      });
+      console.log('Fetching full content via raw_url:', file.raw_url);
+      const rawResponse = await fetch(file.raw_url);
       if (!rawResponse.ok) throw new Error('Failed to load full gist content');
       content = await rawResponse.text();
       console.log('Raw content length:', content.length);
@@ -181,18 +177,19 @@ class GistStorage {
     }
 
     this.updateSyncStatus('loading');
+    gistStorage._suppressAutoSync = true;
+    fileStorage._suppressAutoSync = true;
 
     try {
       const data = await this.loadFromGist();
       console.log('Gist data loaded:', Object.keys(data), 'topics:', data.topics, 'groups:', data.groups);
 
-      // Apply loaded data
-      if (data.notes) { saveNotesData(data.notes); console.log('Notes saved, count:', Object.keys(data.notes).length); }
-      else console.log('No notes in data');
-      if (data.topics) saveNotesTopics(data.topics);
-      if (data.timestamps) saveNotesTimestamps(data.timestamps);
-      if (data.groups) saveNotesGroups(data.groups);
-      if (data.topicGroups) saveTopicGroups(data.topicGroups);
+      // Apply loaded data directly to localStorage (bypass markPendingChanges)
+      if (data.notes) localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(data.notes));
+      if (data.topics) localStorage.setItem(NOTES_TOPICS_KEY, JSON.stringify(data.topics));
+      if (data.timestamps) localStorage.setItem(NOTES_TIMESTAMPS_KEY, JSON.stringify(data.timestamps));
+      if (data.groups) localStorage.setItem(NOTES_GROUPS_KEY, JSON.stringify(data.groups));
+      if (data.topicGroups) localStorage.setItem(NOTES_TOPIC_GROUPS_KEY, JSON.stringify(data.topicGroups));
       if (data.mainGroup) localStorage.setItem(NOTES_MAIN_GROUP_KEY, data.mainGroup);
       if (data.collapsedGroups) localStorage.setItem(NOTES_COLLAPSED_KEY, JSON.stringify(data.collapsedGroups));
       if (data.activeTopic) {
@@ -210,16 +207,20 @@ class GistStorage {
       console.error('Gist load error:', error);
       this.updateSyncStatus('error', error.message);
       throw error;
+    } finally {
+      gistStorage._suppressAutoSync = false;
+      fileStorage._suppressAutoSync = false;
     }
   }
 
   markPendingChanges() {
+    if (this._suppressAutoSync) return;
     this.pendingChanges = true;
     this.scheduleImmediateSync();
   }
 
   scheduleImmediateSync() {
-    if (!this.isEnabled()) return;
+    if (!this.isEnabled() || this._suppressAutoSync) return;
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       if (this.pendingChanges && !this.isSyncing) {

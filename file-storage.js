@@ -13,6 +13,7 @@ class FileStorage {
     this.lastSyncTime = null;
     this.pendingChanges = false;
     this.fileHandle = null;
+    this._suppressAutoSync = false;
   }
 
   loadConfig() {
@@ -149,16 +150,18 @@ class FileStorage {
     }
 
     this.updateSyncStatus('loading');
+    gistStorage._suppressAutoSync = true;
+    fileStorage._suppressAutoSync = true;
 
     try {
       const data = await this.loadFromFile();
 
-      // Apply loaded data
-      if (data.notes) saveNotesData(data.notes);
-      if (data.topics) saveNotesTopics(data.topics);
-      if (data.timestamps) saveNotesTimestamps(data.timestamps);
-      if (data.groups) saveNotesGroups(data.groups);
-      if (data.topicGroups) saveTopicGroups(data.topicGroups);
+      // Apply loaded data directly to localStorage (bypass markPendingChanges)
+      if (data.notes) localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(data.notes));
+      if (data.topics) localStorage.setItem(NOTES_TOPICS_KEY, JSON.stringify(data.topics));
+      if (data.timestamps) localStorage.setItem(NOTES_TIMESTAMPS_KEY, JSON.stringify(data.timestamps));
+      if (data.groups) localStorage.setItem(NOTES_GROUPS_KEY, JSON.stringify(data.groups));
+      if (data.topicGroups) localStorage.setItem(NOTES_TOPIC_GROUPS_KEY, JSON.stringify(data.topicGroups));
       if (data.mainGroup) localStorage.setItem(NOTES_MAIN_GROUP_KEY, data.mainGroup);
       if (data.collapsedGroups) localStorage.setItem(NOTES_COLLAPSED_KEY, JSON.stringify(data.collapsedGroups));
       if (data.activeTopic) {
@@ -176,16 +179,20 @@ class FileStorage {
       console.error('File load error:', error);
       this.updateSyncStatus('error', error.message);
       throw error;
+    } finally {
+      gistStorage._suppressAutoSync = false;
+      fileStorage._suppressAutoSync = false;
     }
   }
 
   markPendingChanges() {
+    if (this._suppressAutoSync) return;
     this.pendingChanges = true;
     this.scheduleImmediateSync();
   }
 
   scheduleImmediateSync() {
-    if (!this.isEnabled() || !this.fileHandle) return;
+    if (!this.isEnabled() || !this.fileHandle || this._suppressAutoSync) return;
     if (this.debounceTimer) clearTimeout(this.debounceTimer);
     this.debounceTimer = setTimeout(() => {
       if (this.pendingChanges && !this.isSyncing) {
