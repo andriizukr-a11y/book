@@ -110,11 +110,14 @@ class GistStorage {
 
     let content = file.content;
 
-    if (file.truncated && file.raw_url) {
-      const rawResponse = await fetch(file.raw_url, {
-        headers: { 'Authorization': `token ${this.config.token}` }
+    if (file.truncated) {
+      const rawResponse = await fetch(`https://api.github.com/gists/${this.config.gistId}`, {
+        headers: {
+          'Authorization': `token ${this.config.token}`,
+          'Accept': 'application/vnd.github.v3.raw'
+        }
       });
-      if (!rawResponse.ok) throw new Error('Failed to load raw gist content');
+      if (!rawResponse.ok) throw new Error('Failed to load full gist content');
       content = await rawResponse.text();
     }
 
