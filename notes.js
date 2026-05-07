@@ -17,7 +17,12 @@ function getNotesData() {
   try { return JSON.parse(localStorage.getItem(NOTES_STORAGE_KEY)) || {}; }
   catch { return {}; }
 }
-function saveNotesData(data) { localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(data)); }
+function saveNotesData(data) { 
+  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(data)); 
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
+}
 
 function getNotesTopics() {
   try {
@@ -26,13 +31,23 @@ function getNotesTopics() {
   } catch {}
   return [getMainGroupName()];
 }
-function saveNotesTopics(topics) { localStorage.setItem(NOTES_TOPICS_KEY, JSON.stringify(topics)); }
+function saveNotesTopics(topics) { 
+  localStorage.setItem(NOTES_TOPICS_KEY, JSON.stringify(topics)); 
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
+}
 
 function getNotesTimestamps() {
   try { return JSON.parse(localStorage.getItem(NOTES_TIMESTAMPS_KEY)) || {}; }
   catch { return {}; }
 }
-function saveNotesTimestamps(ts) { localStorage.setItem(NOTES_TIMESTAMPS_KEY, JSON.stringify(ts)); }
+function saveNotesTimestamps(ts) { 
+  localStorage.setItem(NOTES_TIMESTAMPS_KEY, JSON.stringify(ts)); 
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
+}
 
 function getNotesGroups() {
   try {
@@ -64,7 +79,12 @@ function getNotesGroups() {
   } catch {}
   return [getMainGroupName()];
 }
-function saveNotesGroups(groups) { localStorage.setItem(NOTES_GROUPS_KEY, JSON.stringify(groups)); }
+function saveNotesGroups(groups) { 
+  localStorage.setItem(NOTES_GROUPS_KEY, JSON.stringify(groups)); 
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
+}
 
 function getTopicGroups() {
   try { 
@@ -88,7 +108,12 @@ function getTopicGroups() {
     return tg;
   } catch { return {}; }
 }
-function saveTopicGroups(map) { localStorage.setItem(NOTES_TOPIC_GROUPS_KEY, JSON.stringify(map)); }
+function saveTopicGroups(map) { 
+  localStorage.setItem(NOTES_TOPIC_GROUPS_KEY, JSON.stringify(map)); 
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
+}
 
 function getTopicGroup(topic) { return getTopicGroups()[topic] || getMainGroupName(); }
 
@@ -100,6 +125,9 @@ function getCollapsedGroups() {
 
 function saveCollapsedGroups(arr) {
   localStorage.setItem(NOTES_COLLAPSED_KEY, JSON.stringify(arr));
+  if (typeof gistStorage !== 'undefined' && gistStorage.isEnabled()) {
+    gistStorage.markPendingChanges();
+  }
 }
 
 function getMainGroupName() {
@@ -153,6 +181,16 @@ function initNotes() {
   }
 
   renderNotesUI(output);
+  
+  // Initialize Gist storage UI and auto-sync
+  if (typeof addGistSettingsButton === 'function') {
+    setTimeout(() => {
+      addGistSettingsButton();
+      if (gistStorage.isEnabled()) {
+        gistStorage.startAutoSync();
+      }
+    }, 100);
+  }
 }
 
 function renderNotesUI(container) {
@@ -188,6 +226,9 @@ function renderNotesUI(container) {
       <div class="notes-sidebar">
         <div class="notes-sidebar-list" id="notes-sidebar-list">
           ${groupsHtml}
+        </div>
+        <div class="notes-sidebar-actions">
+          <div class="notes-gist-settings-btn" id="notes-gist-settings-btn" title="Налаштування синхронізації">⚙</div>
           <div class="notes-group-add" id="notes-group-add" title="Нова група">+</div>
         </div>
       </div>

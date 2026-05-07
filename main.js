@@ -3,7 +3,7 @@
 /* ============ НАЛАШТУВАННЯ ============ */
 
 const CONFIG = {
-  allowedIP: '176.37.220.254',
+  secretKeyHash: 'd10bad463e36ebb3c062074b1da3d3204d2eeea7573570874c68579aeff24f6a',
 
   dir: 'bookmarks',
   
@@ -43,14 +43,28 @@ const CONFIG = {
 // Глобальні змінні
 const bookmarksData = {};
 
-async function checkIP() {
-  try {
-    const res = await fetch('https://api64.ipify.org?format=json');
-    const data = await res.json();
-    return data.ip === CONFIG.allowedIP;
-  } catch {
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function checkAccess() {
+  const LS_KEY = 'tab_links_access';
+
+  const params = new URLSearchParams(window.location.search);
+  const urlKey = params.get('key');
+
+  if (urlKey) {
+    const hash = await sha256(urlKey);
+    if (hash === CONFIG.secretKeyHash) {
+      localStorage.setItem(LS_KEY, hash);
+      history.replaceState(null, '', window.location.pathname);
+      return true;
+    }
     return false;
   }
+
+  return localStorage.getItem(LS_KEY) === CONFIG.secretKeyHash;
 }
 
 function injectHead() {
@@ -92,7 +106,7 @@ function loadScript(src) {
 }
 
 (async () => {
-  const allowed = await checkIP();
+  const allowed = await checkAccess();
   if (!allowed) {
     window.location.replace('about:blank');
     return;
@@ -102,7 +116,9 @@ function loadScript(src) {
   injectBody();
 
   await loadScript('bookmarks.js');
+  await loadScript('gist-storage.js');
   await loadScript('notes.js');
+  await loadScript('gist-settings.js');
   await loadScript('tasks.js');
   await loadScript('app.js');
 
