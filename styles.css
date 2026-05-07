@@ -308,21 +308,26 @@ body {
 .notes-layout {
   display: flex;
   gap: 0;
-  max-width: 900px;
+  width: 900px;
+  max-width: 95vw;
+  min-width: 600px;
   margin: 0 auto;
   height: calc(100vh - 140px);
   min-height: 400px;
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+  position: relative;
 }
 
 .notes-sidebar {
   position: relative;
   width: 240px;
-  min-width: 240px;
-  background: var(--bg-secondary);
+  min-width: 180px;
+  max-width: 400px;
+  background: linear-gradient(180deg, var(--bg-secondary) 0%, #1c1c1c 100%);
   border-right: 1px solid var(--border);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
 }
@@ -437,12 +442,44 @@ body {
   flex-direction: row;
   gap: 4px;
   padding: 6px 8px;
-  border-top: 1px solid transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   transition: border-color 0.15s;
 }
 
 .notes-sidebar-actions:hover {
-  border-top-color: var(--border);
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.notes-sidebar-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.notes-sidebar-resizer:hover {
+  background: rgba(91, 156, 245, 0.3);
+}
+
+.notes-layout-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: transparent;
+  cursor: col-resize;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.notes-layout-resizer:hover {
+  background: rgba(91, 156, 245, 0.3);
 }
 
 .notes-gist-settings-btn {
@@ -456,7 +493,7 @@ body {
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  opacity: 0;
+  opacity: 0.3;
   transition: opacity 0.15s, color 0.15s;
   line-height: 1;
 }
@@ -497,7 +534,7 @@ body {
   justify-content: center;
   cursor: pointer;
   user-select: none;
-  opacity: 0;
+  opacity: 0.3;
   transition: opacity 0.15s, color 0.15s;
   line-height: 1;
 }
@@ -534,6 +571,7 @@ body {
   transition: background 0.1s;
   position: relative;
   flex: 0 0 auto;
+  background: #262626;
 }
 
 .notes-topic-item:hover {

@@ -261,9 +261,14 @@ function renderNotesUI(container) {
       </div>`;
   }).join('');
 
+  const savedSidebarWidth = localStorage.getItem('notes_sidebar_width') || 240;
+  const clampedSidebarWidth = Math.max(180, Math.min(400, parseInt(savedSidebarWidth)));
+  const savedLayoutWidth = localStorage.getItem('notes_layout_width') || 900;
+  const clampedLayoutWidth = Math.max(600, Math.min(window.innerWidth * 0.95, parseInt(savedLayoutWidth)));
+
   container.innerHTML = `
-    <div class="notes-layout">
-      <div class="notes-sidebar">
+    <div class="notes-layout" style="width: ${clampedLayoutWidth}px">
+      <div class="notes-sidebar" style="width: ${clampedSidebarWidth}px">
         <div class="notes-sidebar-list" id="notes-sidebar-list">
           ${groupsHtml}
         </div>
@@ -271,6 +276,7 @@ function renderNotesUI(container) {
           <div class="notes-gist-settings-btn" id="notes-gist-settings-btn" title="Налаштування синхронізації">⚙</div>
           <div class="notes-group-add" id="notes-group-add" title="Нова група">+</div>
         </div>
+        <div class="notes-sidebar-resizer" id="notes-sidebar-resizer"></div>
       </div>
       <div class="notes-editor">
         <div class="notes-ctx-toolbar" id="notes-ctx-toolbar">
@@ -287,6 +293,7 @@ function renderNotesUI(container) {
         <div class="notes-textarea" id="notes-textarea" contenteditable="true" placeholder="Почніть писати...">${content}</div>
         <div class="notes-status" id="notes-status">${getEditTime()}</div>
       </div>
+      <div class="notes-layout-resizer" id="notes-layout-resizer"></div>
     </div>
   `;
 
@@ -300,6 +307,70 @@ function bindNotesEvents(container) {
   const editor = container.querySelector('#notes-textarea');
   const statusEl = container.querySelector('#notes-status');
   const ctxToolbar = container.querySelector('#notes-ctx-toolbar');
+  const sidebar = container.querySelector('.notes-sidebar');
+  const resizer = container.querySelector('#notes-sidebar-resizer');
+  const layout = container.querySelector('.notes-layout');
+  const layoutResizer = container.querySelector('#notes-layout-resizer');
+
+  // Sidebar resizer
+  let isResizingSidebar = false;
+  let sidebarStartX = 0;
+  let sidebarStartWidth = 0;
+
+  if (resizer) {
+    resizer.addEventListener('mousedown', (e) => {
+      isResizingSidebar = true;
+      sidebarStartX = e.clientX;
+      sidebarStartWidth = sidebar.offsetWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+  }
+
+  // Layout resizer
+  let isResizingLayout = false;
+  let layoutStartX = 0;
+  let layoutStartWidth = 0;
+
+  if (layoutResizer) {
+    layoutResizer.addEventListener('mousedown', (e) => {
+      isResizingLayout = true;
+      layoutStartX = e.clientX;
+      layoutStartWidth = layout.offsetWidth;
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (isResizingSidebar) {
+      const deltaX = e.clientX - sidebarStartX;
+      const newWidth = Math.max(180, Math.min(400, sidebarStartWidth + deltaX));
+      sidebar.style.width = newWidth + 'px';
+    }
+    if (isResizingLayout) {
+      const deltaX = e.clientX - layoutStartX;
+      const newWidth = Math.max(600, Math.min(window.innerWidth * 0.95, layoutStartWidth + deltaX));
+      layout.style.width = newWidth + 'px';
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizingSidebar) {
+      isResizingSidebar = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      localStorage.setItem('notes_sidebar_width', sidebar.offsetWidth);
+    }
+    if (isResizingLayout) {
+      isResizingLayout = false;
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      localStorage.setItem('notes_layout_width', layout.offsetWidth);
+    }
+  });
 
   // Placeholder management
   function updatePlaceholder() {
