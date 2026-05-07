@@ -106,6 +106,21 @@ function switchTab(tabId) {
 
   window.location.hash = tabId;
 
+  if (tabId === 'notes') {
+    const topics = getNotesTopics();
+    let lastTopic = localStorage.getItem(NOTES_ACTIVE_KEY);
+    if (!lastTopic || !topics.includes(lastTopic)) {
+      lastTopic = topics[0];
+    }
+    if (lastTopic !== notesActiveTopic) {
+      notesActiveTopic = lastTopic;
+      const output = document.getElementById('output-notes');
+      if (output && typeof renderNotesUI === 'function') {
+        renderNotesUI(output);
+      }
+    }
+  }
+
   if (tabId === 'tasks') {
     setTimeout(() => document.getElementById('tasks-add-input')?.focus(), 0);
   }

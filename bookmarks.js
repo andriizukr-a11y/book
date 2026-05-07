@@ -79,6 +79,14 @@ function displayBookmarks(tabId, bookmarks) {
   output.innerHTML = html;
   loadFavicons(output);
   setupTooltips(output);
+
+  output.querySelectorAll('.bookmark-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      window.open(item.href, '_blank');
+    });
+  });
 }
 
 function cleanTitle(title) {

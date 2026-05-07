@@ -9,6 +9,7 @@ function initNotes() {
   if (!topics.includes(notesActiveTopic)) {
     notesActiveTopic = topics[0];
   }
+  localStorage.setItem(NOTES_ACTIVE_KEY, notesActiveTopic);
 
   renderNotesUI(output);
   
@@ -28,10 +29,10 @@ function initNotes() {
     const { status, message } = e.detail;
     if (status === 'error') {
       notesSyncError = message;
-      setTimeout(() => renderNotesUI(output), 0);
+      setTimeout(() => { saveCurrentNoteSilent(); renderNotesUI(output); }, 0);
     } else if (status === 'success') {
       notesSyncError = null;
-      setTimeout(() => renderNotesUI(output), 0);
+      setTimeout(() => { saveCurrentNoteSilent(); renderNotesUI(output); }, 0);
     }
   };
   window.addEventListener('gist-sync-status', handleSyncStatus);

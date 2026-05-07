@@ -121,15 +121,15 @@ function loadScript(src) {
   injectBody();
 
   await loadScript('bookmarks.js');
-  await loadScript('gist-storage.js');
-  await loadScript('file-storage.js');
+  await loadScript('notes/gist-storage.js');
+  await loadScript('notes/file-storage.js');
   await loadScript('notes/storage.js');
   await loadScript('notes/utils.js');
   await loadScript('notes/checklists.js');
   await loadScript('notes/ui.js');
   await loadScript('notes/events.js');
   await loadScript('notes/notes.js');
-  await loadScript('gist-settings.js');
+  await loadScript('notes/gist-settings.js');
   await loadScript('tasks.js');
   await loadScript('app.js');
 
