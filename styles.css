@@ -523,6 +523,11 @@ body {
   color: var(--danger);
 }
 
+.notes-gist-settings-btn.gist-btn-local {
+  opacity: 1 !important;
+  color: var(--warning);
+}
+
 .notes-group-add {
   width: 24px;
   height: 24px;

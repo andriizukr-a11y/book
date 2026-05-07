@@ -445,12 +445,15 @@ function addGistSettingsButton() {
   window.addEventListener('gist-sync-status', updateButtonStatus);
   window.addEventListener('file-sync-status', updateButtonStatus);
 
-  // Show error if sync method is enabled but not properly configured
+  // Show status based on current sync config
   if (gistStorage.config.enabled && !gistStorage.config.token) {
     btn.classList.add('gist-btn-error');
     btn.title = 'Помилка: Gist увімкнено, але токен не вказано';
   } else if (fileStorage.config.enabled && !fileStorage.fileHandle) {
     btn.classList.add('gist-btn-error');
     btn.title = 'Помилка: синхронізацію з файлом увімкнено, але файл не вибрано';
+  } else if (!gistStorage.config.enabled && !fileStorage.config.enabled) {
+    btn.classList.add('gist-btn-local');
+    btn.title = 'Дані зберігаються тільки в браузері';
   }
 }
