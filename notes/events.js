@@ -185,6 +185,7 @@ function bindNotesEvents(container) {
   });
 
   editor.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); }
     if (e.ctrlKey && e.key === 'b') { e.preventDefault(); document.execCommand('bold'); }
     if (e.ctrlKey && e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
     if (e.ctrlKey && e.key === 'u') { e.preventDefault(); document.execCommand('underline'); }
