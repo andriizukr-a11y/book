@@ -363,12 +363,18 @@ function bindNotesEvents(container) {
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       localStorage.setItem('notes_sidebar_width', sidebar.offsetWidth);
+      if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+        fileStorage.markPendingChanges();
+      }
     }
     if (isResizingLayout) {
       isResizingLayout = false;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
       localStorage.setItem('notes_layout_width', layout.offsetWidth);
+      if (typeof fileStorage !== 'undefined' && fileStorage.isEnabled()) {
+        fileStorage.markPendingChanges();
+      }
     }
   });
 

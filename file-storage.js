@@ -125,6 +125,8 @@ class FileStorage {
         mainGroup: getMainGroupName(),
         collapsedGroups: getCollapsedGroups(),
         activeTopic: notesActiveTopic,
+        sidebarWidth: localStorage.getItem('notes_sidebar_width'),
+        layoutWidth: localStorage.getItem('notes_layout_width'),
         lastSync: new Date().toISOString()
       };
 
@@ -168,6 +170,8 @@ class FileStorage {
         notesActiveTopic = data.activeTopic;
         localStorage.setItem(NOTES_ACTIVE_KEY, data.activeTopic);
       }
+      if (data.sidebarWidth) localStorage.setItem('notes_sidebar_width', data.sidebarWidth);
+      if (data.layoutWidth) localStorage.setItem('notes_layout_width', data.layoutWidth);
 
       this.lastSyncTime = new Date();
       this.updateSyncStatus('success');
