@@ -529,6 +529,12 @@ function bindNotesEvents(container) {
     groupAdd.style.display = 'none';
     groupAdd.parentElement.appendChild(input);
     
+    // Встановлюємо фокус з невеликою затримкою
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 0);
+    
     // Повністю блокуємо drag-and-drop
     let parent = input;
     while (parent = parent.parentElement) {
@@ -563,8 +569,6 @@ function bindNotesEvents(container) {
       if (e.key === 'Escape') { cleanup(); input.remove(); groupAdd.style.display = ''; }
     });
     input.addEventListener('blur', commit);
-    
-    input.focus();
   });
 
   container.querySelectorAll('.notes-group').forEach(group => {
@@ -760,8 +764,10 @@ function bindNotesEvents(container) {
       });
     });
 
-    item.addEventListener('dblclick', e => {
+    item.addEventListener('auxclick', e => {
+      if (e.button !== 1) return;
       if (item.querySelector('.notes-topic-input')) return;
+      e.preventDefault();
       e.stopPropagation();
       item.draggable = false;
       const oldName = item.dataset.topic;
@@ -794,11 +800,11 @@ function bindNotesEvents(container) {
         topics[idx] = trimmed;
         saveNotesTopics(topics);
         const data = getNotesData();
-        if (data[oldName]) { data[trimmed] = data[oldName]; delete data[oldName]; saveNotesData(data); }
+        if (data.hasOwnProperty(oldName)) { data[trimmed] = data[oldName]; delete data[oldName]; saveNotesData(data); }
         const ts = getNotesTimestamps();
-        if (ts[oldName]) { ts[trimmed] = ts[oldName]; delete ts[oldName]; saveNotesTimestamps(ts); }
+        if (ts.hasOwnProperty(oldName)) { ts[trimmed] = ts[oldName]; delete ts[oldName]; saveNotesTimestamps(ts); }
         const tg = getTopicGroups();
-        if (tg[oldName]) { tg[trimmed] = tg[oldName]; delete tg[oldName]; saveTopicGroups(tg); }
+        if (tg.hasOwnProperty(oldName)) { tg[trimmed] = tg[oldName]; delete tg[oldName]; saveTopicGroups(tg); }
         if (notesActiveTopic === oldName) {
           notesActiveTopic = trimmed;
           localStorage.setItem(NOTES_ACTIVE_KEY, notesActiveTopic);
