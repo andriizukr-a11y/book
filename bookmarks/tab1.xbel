@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xbel PUBLIC "+//IDN python.org//DTD XML Bookmark Exchange Language 1.0//EN//XML" "http://pyxml.sourceforge.net/topics/dtds/xbel.dtd">
 <xbel version="1.0">
-<!--- highestId :16: for Floccus bookmark sync browser extension -->
+<!--- highestId :17: for Floccus bookmark sync browser extension -->
 
 <bookmark href="https://blimb.su/" id="1">
   <title>Blimb - Сайт для глаз</title>
@@ -50,5 +50,8 @@
 </bookmark>
 <bookmark href="https://www.youtube.com/watch?v=MR4Y4SuC3qk" id="16">
   <title>Гимнастика для шеи доктора А.Ю. Шишонина (без музыки) - YouTube</title>
+</bookmark>
+<bookmark href="https://www.youtube.com/watch?is=DfjDhGebP7miRIm7&amp;v=sLb2QTHMBWE&amp;feature=youtu.be" id="17">
+  <title>Mit mehr Energie in den Tag (8 Gesundheits-Übungen) - YouTube</title>
 </bookmark>
 </xbel>
