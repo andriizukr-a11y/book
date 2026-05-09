@@ -113,6 +113,22 @@ function switchTab(tabId) {
     }
   }
 
+  if (tabId === 'quick-notes') {
+    const output = document.getElementById('output-quick-notes');
+    if (output && typeof renderQuickNotesUI === 'function') {
+      const topics = getQuickNotesTopics();
+      let lastTopic = localStorage.getItem('quick_notes_active_topic');
+      if (!lastTopic || !topics.includes(lastTopic)) {
+        lastTopic = topics[0];
+      }
+      if (typeof quickNotesActiveTopic !== 'undefined' && lastTopic !== quickNotesActiveTopic) {
+        quickNotesActiveTopic = lastTopic;
+        localStorage.setItem('quick_notes_active_topic', quickNotesActiveTopic);
+      }
+      renderQuickNotesUI(output);
+    }
+  }
+
   if (tabId === 'tasks') {
     setTimeout(() => document.getElementById('tasks-add-input')?.focus(), 0);
   }
@@ -152,6 +168,9 @@ async function loadDirectory() {
       const id = CONFIG.specialTabs[tabName];
       if (id === 'notes' && typeof initNotes === 'function') {
         initNotes();
+      }
+      if (id === 'quick-notes' && typeof initQuickNotes === 'function') {
+        initQuickNotes();
       }
       if (id === 'tasks' && typeof initTasks === 'function') {
         initTasks();

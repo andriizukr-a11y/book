@@ -29,11 +29,13 @@ const CONFIG = {
     'Проектор',
     'Робота',
     'Нотатки',
+    'Швидка нотатка',
     'Завдання'
   ],
 
   specialTabs: {
     'Нотатки': 'notes',
+    'Швидка нотатка': 'quick-notes',
     'Завдання': 'tasks'
   }
 };
@@ -130,6 +132,7 @@ function loadScript(src) {
   await loadScript('notes/events.js');
   await loadScript('notes/notes.js');
   await loadScript('notes/gist-settings.js');
+  await loadScript('notes/quick-notes.js');
   await loadScript('tasks.js');
   await loadScript('app.js');
 
