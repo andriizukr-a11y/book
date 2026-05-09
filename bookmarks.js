@@ -79,6 +79,17 @@ function displayBookmarks(tabId, bookmarks) {
   output.innerHTML = html;
   loadFavicons(output);
   setupTooltips(output);
+
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+  output.querySelectorAll('.bookmark-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (isTouchDevice) {
+        e.preventDefault();
+        window.open(item.href, '_blank', 'noopener,noreferrer');
+      }
+    });
+  });
 }
 
 function cleanTitle(title) {
