@@ -82,20 +82,12 @@ function displayBookmarks(tabId, bookmarks) {
 
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-  output.querySelectorAll('.bookmark-item').forEach(item => {
-    item.addEventListener('click', e => {
-      if (isTouchDevice) {
-        e.preventDefault();
-        const link = document.createElement('a');
-        link.href = item.href;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+  if (isTouchDevice) {
+    output.querySelectorAll('.bookmark-item').forEach(item => {
+      item.removeAttribute('target');
+      item.removeAttribute('rel');
     });
-  });
+  }
 }
 
 function cleanTitle(title) {
