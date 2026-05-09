@@ -86,7 +86,13 @@ function displayBookmarks(tabId, bookmarks) {
     item.addEventListener('click', e => {
       if (isTouchDevice) {
         e.preventDefault();
-        window.open(item.href, '_blank', 'noopener,noreferrer');
+        const link = document.createElement('a');
+        link.href = item.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     });
   });
