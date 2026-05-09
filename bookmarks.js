@@ -80,8 +80,12 @@ function displayBookmarks(tabId, bookmarks) {
   loadFavicons(output);
   setupTooltips(output);
 
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   output.querySelectorAll('.bookmark-item').forEach(item => {
     item.addEventListener('click', e => {
+      // Skip interception on touch devices (Android, iOS) to allow default link behavior
+      if (isTouchDevice) return;
       if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
       e.preventDefault();
       window.open(item.href, '_blank');
