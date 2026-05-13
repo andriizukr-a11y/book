@@ -943,3 +943,34 @@
 .quick-notes-status.saved {
   color: var(--success);
 }
+
+.notes-editor-ctx-menu {
+  position: fixed;
+  z-index: 9999;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  min-width: 180px;
+}
+
+.notes-editor-ctx-item {
+  padding: 7px 12px;
+  border-radius: 5px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+}
+
+.notes-editor-ctx-item:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.notes-markup-mode {
+  font-family: 'Consolas', 'Courier New', monospace !important;
+  font-size: 13px !important;
+  white-space: pre-wrap !important;
+  color: #a8c4a2 !important;
+}

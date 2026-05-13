@@ -29,10 +29,26 @@ function initNotes() {
     const { status, message } = e.detail;
     if (status === 'error') {
       notesSyncError = message;
-      setTimeout(() => { saveCurrentNoteSilent(); renderNotesUI(output); }, 0);
+      setTimeout(() => {
+        const editorHadFocus = document.activeElement === output.querySelector('#notes-textarea');
+        saveCurrentNoteSilent();
+        renderNotesUI(output);
+        if (editorHadFocus) {
+          const editor = output.querySelector('#notes-textarea');
+          if (editor) editor.focus();
+        }
+      }, 0);
     } else if (status === 'success') {
       notesSyncError = null;
-      setTimeout(() => { saveCurrentNoteSilent(); renderNotesUI(output); }, 0);
+      setTimeout(() => {
+        const editorHadFocus = document.activeElement === output.querySelector('#notes-textarea');
+        saveCurrentNoteSilent();
+        renderNotesUI(output);
+        if (editorHadFocus) {
+          const editor = output.querySelector('#notes-textarea');
+          if (editor) editor.focus();
+        }
+      }, 0);
     }
   };
   window.addEventListener('gist-sync-status', handleSyncStatus);

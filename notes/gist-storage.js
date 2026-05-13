@@ -2,7 +2,7 @@
 
 const GIST_CONFIG_KEY = 'gist_config';
 const GIST_SYNC_INTERVAL = 30000; // 30 seconds
-const GIST_DEBOUNCE_MS = 2000; // 2 seconds debounce for immediate sync
+const GIST_DEBOUNCE_MS = 10000; // 10 seconds debounce for immediate sync
 
 class GistStorage {
   constructor() {

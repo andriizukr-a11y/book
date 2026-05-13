@@ -166,6 +166,114 @@ function bindNotesEvents(container) {
   editor.addEventListener('scroll', hideCtxToolbar);
   window.addEventListener('scroll', hideCtxToolbar, true);
 
+  let markupMode = false;
+
+  function htmlToReadable(html) {
+    return html
+      .replace(/<br\s*\/?>/gi, '↵\n')
+      .replace(/<b>([\s\S]*?)<\/b>/gi, '**$1**')
+      .replace(/<strong>([\s\S]*?)<\/strong>/gi, '**$1**')
+      .replace(/<i>([\s\S]*?)<\/i>/gi, '_$1_')
+      .replace(/<em>([\s\S]*?)<\/em>/gi, '_$1_')
+      .replace(/<u>([\s\S]*?)<\/u>/gi, '__$1__')
+      .replace(/<s>([\s\S]*?)<\/s>/gi, '~~$1~~')
+      .replace(/<ul[^>]*>/gi, '\n')
+      .replace(/<ol[^>]*>/gi, '\n')
+      .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '• $1\n')
+      .replace(/<\/ul>/gi, '\n')
+      .replace(/<\/ol>/gi, '\n')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function readableToHtml(text) {
+    // First apply inline formatting
+    let result = text
+      .replace(/\*\*([\s\S]*?)\*\*/g, '<b>$1</b>')
+      .replace(/__([\s\S]*?)__/g, '<u>$1</u>')
+      .replace(/_([\s\S]*?)_/g, '<i>$1</i>')
+      .replace(/~~([\s\S]*?)~~/g, '<s>$1</s>');
+
+    // Process line by line: group bullet lines into <ul>
+    const lines = result.split('\n');
+    let html = '';
+    let inList = false;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const bullet = line.match(/^• (.*)$/);
+      if (bullet) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += '<li>' + bullet[1] + '</li>';
+      } else {
+        if (inList) { html += '</ul>'; inList = false; }
+        const startsWithArrow = line.trimStart().startsWith('↵');
+        const converted = line.replace(/↵/g, '<br>');
+        if (converted) {
+          if (html && !html.endsWith('</ul>') && !html.endsWith('<br>') && !startsWithArrow) html += '<br>';
+          html += converted;
+        } else {
+          // empty line
+          if (html && !html.endsWith('<br>') && !html.endsWith('</ul>')) html += '<br>';
+        }
+      }
+    }
+    if (inList) html += '</ul>';
+
+    return html;
+  }
+
+  function setMarkupMode(enabled) {
+    markupMode = enabled;
+    if (enabled) {
+      editor.textContent = htmlToReadable(editor.innerHTML);
+      editor.classList.add('notes-markup-mode');
+    } else {
+      editor.innerHTML = readableToHtml(editor.textContent);
+      editor.classList.remove('notes-markup-mode');
+    }
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  editor.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    hideCtxToolbar();
+
+    const existing = document.querySelector('.notes-editor-ctx-menu');
+    if (existing) existing.remove();
+
+    const menu = document.createElement('div');
+    menu.className = 'notes-editor-ctx-menu';
+    menu.innerHTML = `<div class="notes-editor-ctx-item" id="notes-ctx-markup">${markupMode ? '✓ ' : ''}Показати розмітку</div>`;
+
+    document.body.appendChild(menu);
+
+    let x = e.clientX;
+    let y = e.clientY;
+    if (x + menu.offsetWidth > window.innerWidth - 8) x = window.innerWidth - menu.offsetWidth - 8;
+    if (y + menu.offsetHeight > window.innerHeight - 8) y = window.innerHeight - menu.offsetHeight - 8;
+    menu.style.left = x + 'px';
+    menu.style.top = y + 'px';
+
+    menu.querySelector('#notes-ctx-markup').addEventListener('mousedown', ev => {
+      ev.preventDefault();
+      menu.remove();
+      setMarkupMode(!markupMode);
+    });
+
+    const closeMenu = (ev) => {
+      if (!menu.contains(ev.target)) {
+        menu.remove();
+        document.removeEventListener('mousedown', closeMenu, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', closeMenu, true), 0);
+  });
+
   ctxToolbar.querySelectorAll('.notes-tb-btn[data-cmd]').forEach(btn => {
     btn.addEventListener('mousedown', e => {
       e.preventDefault();
@@ -184,15 +292,48 @@ function bindNotesEvents(container) {
     hideCtxToolbar();
   });
 
-  editor.addEventListener('keydown', e => {
+  document.addEventListener('keydown', e => {
+    if (!editor.contains(document.activeElement) && document.activeElement !== editor) return;
     if (e.ctrlKey && e.key === 's') { e.preventDefault(); }
-    if (e.ctrlKey && e.key === 'b') { e.preventDefault(); document.execCommand('bold'); }
-    if (e.ctrlKey && e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
-    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); document.execCommand('underline'); }
+    if (e.ctrlKey && !e.shiftKey && e.key === 'b') { e.preventDefault(); document.execCommand('bold'); }
+    if (e.ctrlKey && !e.shiftKey && e.key === 'i') { e.preventDefault(); document.execCommand('italic'); }
+    if (e.ctrlKey && !e.shiftKey && e.key === 'u') { e.preventDefault(); document.execCommand('underline'); }
     if (e.ctrlKey && e.shiftKey && e.key === 'C') { e.preventDefault(); insertChecklistItem(editor); }
+  }, true);
+
+  editor.addEventListener('keydown', e => {
+    if (e.ctrlKey && e.shiftKey && e.key === 'C') { return; }
     if (e.key === 'Enter' && !e.shiftKey) {
       const checklistItem = e.target.closest('.notes-checklist-item');
-      if (!checklistItem) {
+      const sel = window.getSelection();
+      const anchorNode = sel?.anchorNode;
+      const anchorEl = anchorNode?.nodeType === Node.TEXT_NODE ? anchorNode.parentElement : anchorNode;
+      const listItem = anchorEl?.closest('li');
+      if (!checklistItem && listItem) {
+        const isEmpty = listItem.textContent.trim() === '';
+        if (isEmpty) {
+          e.preventDefault();
+          const list = listItem.closest('ul, ol');
+          listItem.remove();
+          if (list.querySelectorAll('li').length === 0) {
+            const br = document.createElement('br');
+            list.replaceWith(br);
+            const range = document.createRange();
+            range.setStartAfter(br);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          } else {
+            const br = document.createElement('br');
+            list.after(br);
+            const range = document.createRange();
+            range.setStartAfter(br);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
+      } else if (!checklistItem && !listItem) {
         e.preventDefault();
         document.execCommand('insertLineBreak');
       }
@@ -242,8 +383,112 @@ function bindNotesEvents(container) {
           editor.dispatchEvent(new Event('input', { bubbles: true }));
         };
         reader.readAsDataURL(blob);
-        break;
+        return;
       }
+    }
+
+    const html = e.clipboardData.getData('text/html');
+    if (html) {
+      e.preventDefault();
+
+      const INLINE = new Set(['B','STRONG','I','EM','U','S','STRIKE']);
+      const BLOCK  = new Set(['P','DIV','H1','H2','H3','H4','H5','H6','BLOCKQUOTE','PRE','HEADER','FOOTER','SECTION','ARTICLE','LI']);
+
+      function cleanNode(node, frag) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          if (node.textContent) frag.appendChild(document.createTextNode(node.textContent));
+          return;
+        }
+        if (node.nodeType !== Node.ELEMENT_NODE) return;
+        const tag = node.tagName;
+
+        if (tag === 'BR') {
+          frag.appendChild(document.createElement('br'));
+          return;
+        }
+        if (tag === 'UL' || tag === 'OL') {
+          const el = document.createElement(tag);
+          node.childNodes.forEach(c => cleanNode(c, el));
+          frag.appendChild(el);
+          return;
+        }
+        if (tag === 'LI') {
+          const el = document.createElement('li');
+          node.childNodes.forEach(c => cleanNode(c, el));
+          frag.appendChild(el);
+          return;
+        }
+        if (INLINE.has(tag)) {
+          const mapped = (tag === 'STRONG') ? 'B' : (tag === 'EM') ? 'I' : (tag === 'STRIKE') ? 'S' : tag;
+          const el = document.createElement(mapped);
+          node.childNodes.forEach(c => cleanNode(c, el));
+          frag.appendChild(el);
+          return;
+        }
+        if (BLOCK.has(tag)) {
+          // Check if previous sibling in frag is already a br, avoid double
+          node.childNodes.forEach(c => cleanNode(c, frag));
+          const last = frag.lastChild;
+          if (last && last.nodeName !== 'BR') {
+            frag.appendChild(document.createElement('br'));
+          }
+          return;
+        }
+        // skip STYLE, SCRIPT, META, HEAD etc — recurse into unknown inline-ish tags
+        if (!['STYLE','SCRIPT','META','HEAD','HTML','BODY'].includes(tag)) {
+          node.childNodes.forEach(c => cleanNode(c, frag));
+        }
+      }
+
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      const frag = document.createDocumentFragment();
+      // If html wraps in html/body, use body
+      const body = tmp.querySelector('body') || tmp;
+      body.childNodes.forEach(c => cleanNode(c, frag));
+
+      // Trim leading/trailing br
+      while (frag.firstChild?.nodeName === 'BR') frag.removeChild(frag.firstChild);
+      while (frag.lastChild?.nodeName === 'BR') frag.removeChild(frag.lastChild);
+
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const lastChild = frag.lastChild;
+      range.insertNode(frag);
+      if (lastChild) range.setStartAfter(lastChild);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
+
+    // Fallback: plain text
+    const text = e.clipboardData.getData('text/plain');
+    if (text) {
+      e.preventDefault();
+      const sel = window.getSelection();
+      if (!sel.rangeCount) return;
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+
+      const frag = document.createDocumentFragment();
+      const lines = text.split('\n');
+      lines.forEach((line, i) => {
+        const trimmed = line.trimStart();
+        if (trimmed) frag.appendChild(document.createTextNode(trimmed));
+        if (i < lines.length - 1) frag.appendChild(document.createElement('br'));
+      });
+
+      const lastChild = frag.lastChild;
+      range.insertNode(frag);
+      if (lastChild) range.setStartAfter(lastChild);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      editor.dispatchEvent(new Event('input', { bubbles: true }));
     }
   });
 

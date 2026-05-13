@@ -69,32 +69,6 @@ async function checkAccess() {
   return localStorage.getItem(LS_KEY) === CONFIG.secretKeyHash;
 }
 
-function injectHead() {
-  document.title = 'Tab Links';
-
-  const favicon = document.createElement('link');
-  favicon.rel = 'icon';
-  favicon.href = 'data/favicon.png';
-  favicon.type = 'image/png';
-  document.head.appendChild(favicon);
-
-  const preload = document.createElement('link');
-  preload.rel = 'preload';
-  preload.href = 'data/favicons/default.png';
-  preload.as = 'image';
-  document.head.appendChild(preload);
-
-  const styles = document.createElement('link');
-  styles.rel = 'stylesheet';
-  styles.href = 'styles.css';
-  document.head.appendChild(styles);
-
-  const notesStyles = document.createElement('link');
-  notesStyles.rel = 'stylesheet';
-  notesStyles.href = 'notes/styles.css';
-  document.head.appendChild(notesStyles);
-}
-
 function injectBody() {
   document.body.insertAdjacentHTML('beforeend',
     '<div class="tabs" id="tabs-container"></div>' +
@@ -102,13 +76,20 @@ function injectBody() {
   );
 }
 
-function loadScript(src) {
+// Завантажуємо скрипти паралельно, але виконуємо в заданому порядку
+// (script.async = false для динамічно доданих скриптів зберігає порядок).
+function loadScriptsInOrder(srcs) {
   return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = reject;
-    document.body.appendChild(s);
+    let remaining = srcs.length;
+    if (!remaining) return resolve();
+    srcs.forEach(src => {
+      const s = document.createElement('script');
+      s.src = src;
+      s.async = false;
+      s.onload = () => { if (--remaining === 0) resolve(); };
+      s.onerror = reject;
+      document.body.appendChild(s);
+    });
   });
 }
 
@@ -119,22 +100,23 @@ function loadScript(src) {
     return;
   }
 
-  injectHead();
   injectBody();
 
-  await loadScript('bookmarks.js');
-  await loadScript('notes/gist-storage.js');
-  await loadScript('notes/file-storage.js');
-  await loadScript('notes/storage.js');
-  await loadScript('notes/utils.js');
-  await loadScript('notes/checklists.js');
-  await loadScript('notes/ui.js');
-  await loadScript('notes/events.js');
-  await loadScript('notes/notes.js');
-  await loadScript('notes/gist-settings.js');
-  await loadScript('notes/quick-notes.js');
-  await loadScript('tasks.js');
-  await loadScript('app.js');
+  await loadScriptsInOrder([
+    'bookmarks.js',
+    'notes/gist-storage.js',
+    'notes/file-storage.js',
+    'notes/storage.js',
+    'notes/utils.js',
+    'notes/checklists.js',
+    'notes/ui.js',
+    'notes/events.js',
+    'notes/notes.js',
+    'notes/gist-settings.js',
+    'notes/quick-notes.js',
+    'tasks.js',
+    'app.js'
+  ]);
 
   loadDirectory();
 })();
